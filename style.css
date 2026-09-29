@@ -1,7 +1,6 @@
-/* Importação de Fontes — combinação moderna: display geométrico + texto neutro */
+/* Importação de Fontes */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
-/* Variáveis de Cores e Estilos */
 :root {
     --primary-color: #6D4CE0;
     --primary-hover: #4F35B0;
@@ -53,6 +52,7 @@ body {
     overflow: visible;
 }
 
+/* Faixa superior tipo "fita de filme" colorida */
 .container::before {
     content: '';
     position: absolute;
@@ -66,17 +66,20 @@ body {
         var(--mint-color) 60px 80px);
 }
 
+/* 🎞️ Medalha dourada com ROLO DE FILME dentro (ícone SVG) */
 .container::after {
-    content: '★';
+    content: '';
     position: absolute;
     top: -26px; left: 50%;
     width: 54px; height: 54px;
-    display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(145deg, #FFD36E 0%, var(--gold-color) 100%);
-    color: #8A5A00;
+    background-color: var(--gold-color);
+    background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A5A00' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'/><circle cx='12' cy='12' r='2.5' fill='%238A5A00' stroke='none'/><circle cx='12' cy='6' r='1.1' fill='%238A5A00' stroke='none'/><circle cx='12' cy='18' r='1.1' fill='%238A5A00' stroke='none'/><circle cx='6' cy='12' r='1.1' fill='%238A5A00' stroke='none'/><circle cx='18' cy='12' r='1.1' fill='%238A5A00' stroke='none'/></svg>"),
+        linear-gradient(145deg, #FFD36E 0%, var(--gold-color) 100%);
+    background-size: 62%, 100%;
+    background-repeat: no-repeat, no-repeat;
+    background-position: center, center;
     border-radius: 50%;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 22px; font-weight: 700;
     z-index: 2;
     transform: translateX(-50%) rotate(-8deg);
     box-shadow:
@@ -95,18 +98,35 @@ body {
     100% { transform: translateX(-50%) scale(1) rotate(-8deg); opacity: 1; }
 }
 
+/* Títulos */
 h1 {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 28px; font-weight: 700;
+    font-size: 28px;
+    font-weight: 700;
     color: var(--text-dark);
     text-align: center;
     margin-bottom: 30px;
     letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* 🎬 Ícone SVG (claquete) que acompanha o título principal */
+h1 .icon-title {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    color: var(--gold-color);
+    filter: drop-shadow(0 2px 4px rgba(245,166,35,0.35));
 }
 
 h2 {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 21px; font-weight: 600;
+    font-size: 21px;
+    font-weight: 600;
     color: var(--text-dark);
     margin: 40px 0 20px;
     padding-bottom: 14px;
@@ -123,7 +143,8 @@ h2::after {
 }
 
 h3 {
-    font-size: 15px; font-weight: 600;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--text-muted);
     margin: 20px 0 12px;
 }
@@ -173,6 +194,10 @@ button {
     cursor: pointer;
     transition: var(--transition);
     box-shadow: 0 10px 20px rgba(109,76,224,0.25);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 button:hover {
@@ -183,6 +208,14 @@ button:hover {
 
 button:active { transform: translateY(0); }
 button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* 🎬 Ícones SVG internos de botões */
+.btn-icon {
+    width: 1.15em;
+    height: 1.15em;
+    flex-shrink: 0;
+    display: inline-block;
+}
 
 .grid-candidatos {
     display: grid;
@@ -233,16 +266,20 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     line-height: 1.4;
 }
 
+/* ⭐ Selo de vencedor com ESTRELA SVG dentro do círculo dourado */
 .card-candidato::after {
-    content: '★';
+    content: '';
     position: absolute;
     top: 10px; right: 10px;
     width: 26px; height: 26px;
     border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: bold;
-    color: #8A5A00;
-    background: linear-gradient(145deg, #FFD36E 0%, var(--gold-color) 100%);
+    background-color: var(--gold-color);
+    background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238A5A00'><path d='M12 2l2.9 6.9 7.4.6-5.6 4.9 1.7 7.2L12 17.8 5.6 21.6l1.7-7.2-5.6-4.9 7.4-.6z'/></svg>"),
+        linear-gradient(145deg, #FFD36E 0%, var(--gold-color) 100%);
+    background-size: 72%, 100%;
+    background-repeat: no-repeat, no-repeat;
+    background-position: center, center;
     opacity: 0;
     transform: scale(0) rotate(-20deg);
     transition: var(--transition);
@@ -441,7 +478,6 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     .container { padding: 48px 20px 25px; }
     .container::after {
         width: 46px; height: 46px;
-        font-size: 18px;
         top: -22px;
         box-shadow:
             0 6px 12px rgba(245,166,35,0.3),
@@ -454,4 +490,6 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     .grid-candidatos { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
     .card-candidato img { width: 75px; height: 75px; }
     .navegacao-botoes { flex-direction: column; gap: 10px; }
+    h1 { font-size: 22px; }
+    h1 .icon-title { width: 28px; height: 28px; }
 }

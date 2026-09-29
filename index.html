@@ -9,7 +9,16 @@
 <body>
 
 <div class="container">
-    <h1>Premiação Melhores das Séries 2026</h1>
+    <h1>
+        <!-- 🎬 Ícone SVG: Claquete de cinema -->
+        <svg class="icon-title" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/>
+            <path d="m6.2 5.3 3.1 3.9"/>
+            <path d="m12.4 3.4 3.1 4"/>
+            <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
+        </svg>
+        Premiação Melhores das Séries 2026
+    </h1>
     
     <!-- Ecrã de Login -->
     <div id="login-section">
@@ -21,11 +30,17 @@
             <label for="email-login">E-mail</label>
             <input type="email" id="email-login" required placeholder="nome.sobrenome@email.com" style="width: 100%; padding: 14px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; background-color: #f8fafc;">
 
-            <button type="submit" id="btn-login">Entrar</button>
+            <button type="submit" id="btn-login">
+                <!-- 🎬 Ícone SVG: Play / entrar -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polygon points="6 3 20 12 6 21 6 3"/>
+                </svg>
+                Entrar
+            </button>
         </form>
     </div>
 
-    <!-- Ecrã de Votação (Passo a Passo) -->
+    <!-- Ecrã de Votação -->
     <div id="votacao-section">
         <div class="progress-wrapper">
             <div class="progress-info">
@@ -40,9 +55,30 @@
         <form id="form-votacao">
             <div id="secoes-votacao"></div>
             <div class="navegacao-botoes">
-                <button type="button" id="btn-anterior" class="btn-secundario" style="display: none;">Voltar</button>
-                <button type="button" id="btn-proximo">Avançar para a Próxima Categoria</button>
-                <button type="button" id="btn-revisar" style="display: none;">Revisar Meus Votos</button>
+                <button type="button" id="btn-anterior" class="btn-secundario" style="display: none;">
+                    <!-- 🎬 Ícone SVG: Seta para trás -->
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="19" y1="12" x2="5" y2="12"/>
+                        <polyline points="12 19 5 12 12 5"/>
+                    </svg>
+                    Voltar
+                </button>
+                <button type="button" id="btn-proximo">
+                    Avançar para a Próxima Categoria
+                    <!-- 🎬 Ícone SVG: Seta para frente -->
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                        <polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </button>
+                <button type="button" id="btn-revisar" style="display: none;">
+                    <!-- 🎬 Ícone SVG: Lista/Check -->
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="9 11 12 14 22 4"/>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    </svg>
+                    Revisar Meus Votos
+                </button>
             </div>
         </form>
     </div>
@@ -57,8 +93,21 @@
         <div id="lista-resumo" class="resumo-grid"></div>
 
         <div id="botoes-resumo" class="navegacao-botoes">
-            <button type="button" id="btn-voltar-edicao" class="btn-secundario">Alterar Votos</button>
-            <button type="button" id="btn-confirmar-final">Confirmar e Enviar</button>
+            <button type="button" id="btn-voltar-edicao" class="btn-secundario">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12 19 5 12 12 5"/>
+                </svg>
+                Alterar Votos
+            </button>
+            <button type="button" id="btn-confirmar-final">
+                <!-- 🎬 Ícone SVG: Enviar -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+                Confirmar e Enviar
+            </button>
         </div>
 
         <div id="mensagem-sucesso" style="display: none; text-align: center; padding: 20px; background: #e6ffed; border: 1px solid #b7ebc5; border-radius: 8px; margin-top: 20px;">

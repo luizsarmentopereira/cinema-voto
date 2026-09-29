@@ -1,133 +1,636 @@
-const supabaseUrl = 'https://ypyhbuoglipxsyazsxoj.supabase.co';
-const supabaseKey = 'sb_publishable_ufcIVBj-f_fHQqnecaxEfw_50Cslvyx';
-
-// LOGIN DO ADMINISTRADOR
-document.getElementById('form-admin-login').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const email = document.getElementById('admin-email').value.trim().toLowerCase();
-    const senha = document.getElementById('admin-senha').value;
-    const btnLogin = document.getElementById('btn-admin-login');
-
-    btnLogin.innerText = "Autenticando...";
-    btnLogin.disabled = true;
-
-    try {
-        // Procura o administrador no Supabase
-        const url = `${supabaseUrl}/rest/v1/admin_users?email=eq.${encodeURIComponent(email)}&select=*`;
-        const resposta = await fetch(url, {
-            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-        });
-        const admins = await resposta.json();
-
-        if (admins.length > 0 && admins[0].senha === senha) {
-            // Login com sucesso!
-            document.getElementById('admin-login-section').style.display = 'none';
-            document.getElementById('admin-dashboard-section').style.display = 'block';
-            carregarApuracao(); // Inicia a contagem de votos
-        } else {
-            alert("Acesso negado. E-mail ou senha de administrador incorretos.");
-            btnLogin.innerText = "Acessar Apuração";
-            btnLogin.disabled = false;
-        }
-    } catch (erro) {
-        alert("Erro ao conectar com o servidor.");
-        btnLogin.innerText = "Acessar Apuração";
-        btnLogin.disabled = false;
-    }
-});
-
-// FUNÇÃO PARA BUSCAR VOTOS E CALCULAR RESULTADOS
-async function carregarApuracao() {
-    const btnAtualizar = document.getElementById('btn-atualizar');
-    btnAtualizar.innerText = "Atualizando...";
-
-    try {
-        // Baixa todos os votos
-        const url = `${supabaseUrl}/rest/v1/votos?select=*`;
-        const resposta = await fetch(url, {
-            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-        });
-        const votos = await resposta.json();
-
-        document.getElementById('total-votos').innerText = votos.length;
-        
-        // Estrutura para contar os votos
-        const contagem = {
-            estagiario: {},
-            terceirizado: {},
-            comissionado: {},
-            conselheiro: {},
-            funcionario: {}
-        };
-
-        // Percorre todos os votos e soma
-        votos.forEach(voto => {
-            if (voto.estagiario) { contagem.estagiario[voto.estagiario] = (contagem.estagiario[voto.estagiario] || 0) + 1; }
-            if (voto.terceirizado) { contagem.terceirizado[voto.terceirizado] = (contagem.terceirizado[voto.terceirizado] || 0) + 1; }
-            if (voto.comissionado) { contagem.comissionado[voto.comissionado] = (contagem.comissionado[voto.comissionado] || 0) + 1; }
-            if (voto.conselheiro) { contagem.conselheiro[voto.conselheiro] = (contagem.conselheiro[voto.conselheiro] || 0) + 1; }
-            if (voto.funcionario) { contagem.funcionario[voto.funcionario] = (contagem.funcionario[voto.funcionario] || 0) + 1; }
-        });
-
-        renderizarResultados(contagem);
-
-    } catch (erro) {
-        alert("Erro ao buscar a apuração dos votos.");
-    } finally {
-        btnAtualizar.innerText = "🔄 Atualizar Resultados";
-    }
-}
-
-// FUNÇÃO PARA GERAR O HTML COM OS VENCEDORES
-function renderizarResultados(contagem) {
-    const container = document.getElementById('apuracao-resultados');
-    container.innerHTML = ''; // Limpa antes de renderizar
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Apuração - Melhores das Séries</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    const categorias = [
-        { chave: 'estagiario', titulo: 'Estagiário' },
-        { chave: 'terceirizado', titulo: 'Terceirizado' },
-        { chave: 'comissionado', titulo: 'Comissionado' },
-        { chave: 'conselheiro', titulo: 'Conselheiro' },
-        { chave: 'funcionario', titulo: 'Funcionário' }
+    <style>
+        .dashboard-container { max-width: 1200px; }
+        
+        .header-admin { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(23, 18, 43, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
+        .modal-content { background: var(--card-bg); padding: 35px 30px; border-radius: var(--radius-lg); width: 90%; max-width: 420px; box-shadow: var(--shadow-md); text-align: center; }
+        .modal-content h3 { color: var(--primary-color); font-size: 22px; margin-top: 0; margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; }
+        .input-modal { width: 100%; padding: 14px 16px; margin-bottom: 15px; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); font-family: inherit; font-size: 16px; background-color: #FBFAFE; }
+        .input-modal:focus { outline: none; border-color: var(--primary-color); background-color: #fff; box-shadow: 0 0 0 4px var(--primary-light); }
+        .btn-modal { margin-top: 10px; }
+
+        .tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; flex-wrap: wrap; justify-content: center; }
+        .tab-btn { background: transparent; color: var(--text-muted); border: none; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; padding: 10px 20px; cursor: pointer; border-radius: var(--radius-md); box-shadow: none; margin: 0; width: auto; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; }
+        .tab-btn:hover { background: var(--primary-light); color: var(--primary-color); transform: none; box-shadow: none; }
+        .tab-btn.active { background: var(--primary-color); color: white; box-shadow: var(--shadow-sm); }
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .chart-box { background: #FBFAFE; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-sm); }
+        .chart-box h3 { color: var(--primary-color); margin-top: 0; text-align: center; border-bottom: 2px solid var(--gold-light); padding-bottom: 10px; font-size: 18px; }
+        
+        .insight-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .insight-card { background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); color: white; padding: 20px; border-radius: var(--radius-md); text-align: center; box-shadow: var(--shadow-md); }
+        .insight-card h4 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; margin-bottom: 10px; opacity: 0.9; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .insight-card .valor { font-size: 24px; font-weight: 700; }
+        .insight-card.bad { background: linear-gradient(135deg, #6D6483, #17122B); }
+
+        .table-container { overflow-x: auto; background: #FBFAFE; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-sm); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { color: var(--primary-color); font-family: 'Space Grotesk', sans-serif; font-weight: 600; background-color: var(--primary-light); border-radius: 4px; }
+        td { color: var(--text-dark); font-size: 14px; }
+        tr:hover td { background-color: #f1ecfc55; }
+        
+        .btn-excluir {
+            background-color: #e53e3e; color: white; border: none; padding: 6px 12px; font-size: 13px; font-weight: 600;
+            border-radius: var(--radius-md); cursor: pointer; box-shadow: none; margin: 0; width: auto; transition: var(--transition);
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-excluir:hover { background-color: #c53030; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(229, 62, 62, 0.3); }
+
+        /* Ícone SVG padrão em linha */
+        .inline-icon { width: 1.15em; height: 1.15em; flex-shrink: 0; vertical-align: middle; }
+    </style>
+</head>
+<body>
+
+<div class="container dashboard-container">
+    <h1>
+        <!-- 🎬 Claquete SVG -->
+        <svg class="icon-title" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/>
+            <path d="m6.2 5.3 3.1 3.9"/>
+            <path d="m12.4 3.4 3.1 4"/>
+            <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
+        </svg>
+        Painel de Apuração
+    </h1>
+    
+    <!-- Login Admin -->
+    <div id="admin-login-section">
+        <h2>Acesso Restrito</h2>
+        <p style="text-align: center; color: var(--text-muted); margin-bottom: 20px;">Área exclusiva para a comissão organizadora.</p>
+        <form id="form-admin-login">
+            <label for="admin-email">E-mail de Administrador</label>
+            <input type="email" id="admin-email" required placeholder="Ex: admin@premiacao.com">
+
+            <label for="admin-senha">Senha do Painel</label>
+            <input type="password" id="admin-senha" required placeholder="Digite a senha de acesso ao painel" style="width: 100%; padding: 14px 16px; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; background-color: #FBFAFE; margin-top: 8px;">
+
+            <button type="submit" id="btn-admin-login">
+                <!-- 🔑 Ícone SVG: Chave -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="7.5" cy="15.5" r="5.5"/>
+                    <path d="m21 2-9.6 9.6"/>
+                    <path d="m15.5 7.5 3 3L22 7l-3-3"/>
+                </svg>
+                Acessar Apuração
+            </button>
+        </form>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="admin-dashboard-section" style="display: none;">
+        
+        <div class="header-admin">
+            <div style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 15px;">
+                <!-- 👤 Ícone SVG: Usuário -->
+                <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Logado como: <strong id="nome-admin-logado" style="color: var(--primary-color);"></strong>
+            </div>
+            <div>
+                <button type="button" class="btn-secundario" style="padding: 10px 20px; margin-top: 0; border-radius: var(--radius-pill); font-size: 14px; width: auto;" onclick="abrirModalSenha(false)">
+                    <!-- 🔑 Ícone SVG: Chave -->
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="7.5" cy="15.5" r="5.5"/>
+                        <path d="m21 2-9.6 9.6"/>
+                        <path d="m15.5 7.5 3 3L22 7l-3-3"/>
+                    </svg>
+                    Alterar Minha Senha
+                </button>
+            </div>
+        </div>
+
+        <div class="progress-info" style="justify-content: center; margin-bottom: 30px; font-size: 20px;">
+            <span>Total de Votos Registrados: <strong id="total-votos" style="color: var(--accent-color); font-size: 28px;">0</strong></span>
+        </div>
+
+        <!-- Abas -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="abrirAba('aba-candidatos', this)">
+                <!-- 🎬 Claquete SVG -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/>
+                    <path d="m6.2 5.3 3.1 3.9"/>
+                    <path d="m12.4 3.4 3.1 4"/>
+                    <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
+                </svg>
+                Candidatos Mais Votados
+            </button>
+            <button class="tab-btn" onclick="abrirAba('aba-setores', this)">
+                <!-- 📊 Ícone SVG: Gráfico -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="18" y1="20" x2="18" y2="10"/>
+                    <line x1="12" y1="20" x2="12" y2="4"/>
+                    <line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+                Métricas por Série
+            </button>
+            <button class="tab-btn" onclick="abrirAba('aba-eleitores', this)">
+                <!-- 👥 Ícone SVG: Pessoas -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Registo de Eleitores
+            </button>
+            <button class="tab-btn" onclick="abrirAba('aba-logs', this)">
+                <!-- 📋 Ícone SVG: Prancheta -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="8" y="2" width="8" height="4" rx="1"/>
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                    <path d="M9 12h6M9 16h4"/>
+                </svg>
+                Logs de Auditoria
+            </button>
+        </div>
+
+        <!-- ABA 1 -->
+        <div id="aba-candidatos" class="tab-content active">
+            <div class="dashboard-grid" id="container-ranking-candidatos"></div>
+        </div>
+
+        <!-- ABA 2 -->
+        <div id="aba-setores" class="tab-content">
+            <div class="insight-cards">
+                <div class="insight-card">
+                    <h4>
+                        <!-- ⭐ Ícone SVG: Estrela cheia -->
+                        <svg class="inline-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 2l2.9 6.9 7.4.6-5.6 4.9 1.7 7.2L12 17.8 5.6 21.6l1.7-7.2-5.6-4.9 7.4-.6z"/>
+                        </svg>
+                        Série Mais Votada (Geral)
+                    </h4>
+                    <div class="valor" id="insight-setor-mais">N/A</div>
+                </div>
+                <div class="insight-card bad">
+                    <h4>
+                        <!-- 📉 Ícone SVG: Tendência para baixo -->
+                        <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/>
+                            <polyline points="16 17 22 17 22 11"/>
+                        </svg>
+                        Série Menos Votada (Geral)
+                    </h4>
+                    <div class="valor" id="insight-setor-menos">N/A</div>
+                </div>
+            </div>
+            <h3 style="text-align: center; color: var(--text-dark); margin-bottom: 20px;">Séries Mais Votadas por Categoria</h3>
+            <div class="dashboard-grid">
+                <div class="chart-box"><h3>Personagem Feminino</h3><canvas id="chart-setor-personagem_feminino"></canvas></div>
+                <div class="chart-box"><h3>Personagem Masculino</h3><canvas id="chart-setor-personagem_masculino"></canvas></div>
+                <div class="chart-box"><h3>Melhor Pet</h3><canvas id="chart-setor-melhor_pet"></canvas></div>
+            </div>
+        </div>
+
+        <!-- ABA 3 -->
+        <div id="aba-eleitores" class="tab-content">
+            <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--text-dark);">Auditoria e Gestão de Votos</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Caso algum voto precise ser anulado (ex: erro no preenchimento ou contestação de e-mail), pode excluí-lo abaixo para liberar o eleitor a votar novamente.</p>
+            
+            <div class="table-container">
+                <table id="tabela-eleitores">
+                    <thead>
+                        <tr>
+                            <th>Nome do Eleitor</th>
+                            <th>E-mail</th>
+                            <th>Data e Hora</th>
+                            <th style="text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA 4 -->
+        <div id="aba-logs" class="tab-content">
+            <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--text-dark);">Histórico de Anulações (Logs)</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Registo imutável de quais administradores anularam votos e quando.</p>
+            
+            <div class="table-container">
+                <table id="tabela-logs">
+                    <thead>
+                        <tr>
+                            <th>Administrador Responsável</th>
+                            <th>Eleitor Afetado</th>
+                            <th>Detalhes da Ação</th>
+                            <th>Data e Hora da Exclusão</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+            <button type="button" id="btn-atualizar" class="btn-secundario" style="width: auto; padding: 12px 24px;">
+                <!-- 🔄 Ícone SVG: Atualizar -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                    <path d="M21 3v5h-5"/>
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                    <path d="M3 21v-5h5"/>
+                </svg>
+                Atualizar Resultados em Tempo Real
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Senha -->
+<div id="modal-senha" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h3 id="titulo-modal-senha">Alterar Senha</h3>
+        <p id="desc-modal-senha" style="color: var(--text-muted); font-size: 14px; margin-bottom: 25px;">Por segurança, defina uma nova senha para o seu acesso.</p>
+        <form id="form-alterar-senha">
+            <input type="password" id="nova-senha" required placeholder="Digite a nova senha" class="input-modal">
+            <input type="password" id="confirma-nova-senha" required placeholder="Confirme a nova senha" class="input-modal">
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button type="button" id="btn-fechar-modal" class="btn-secundario btn-modal" style="display:none; width: 40%;">Cancelar</button>
+                <button type="submit" id="btn-salvar-senha" class="btn-modal" style="width: 100%;">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    Salvar Nova Senha
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // ⚠️ Credenciais do Supabase
+    const supabaseUrl = 'https://ypyhbuoglipxsyazsxoj.supabase.co';
+    const supabaseKey = 'sb_publishable_ufcIVBj-f_fHQqnecaxEfw_50Cslvyx';
+    let graficosAtivos = {};
+    let adminLogado = null;
+    let trocaObrigatoria = false;
+
+    // ============================================================
+    // 🎬 ÍCONES SVG (usados dentro de strings JS renderizadas)
+    // ============================================================
+    const ICON = {
+        trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;vertical-align:-0.2em;flex-shrink:0;"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>',
+        trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:-0.15em;"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>',
+        refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;vertical-align:-0.2em;"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>'
+    };
+
+    const candidatosData = [
+        // Game of Thrones
+        { nome: "Daenerys Targaryen", setor: "Game of Thrones" },
+        { nome: "Arya Stark", setor: "Game of Thrones" },
+        { nome: "Cersei Lannister", setor: "Game of Thrones" },
+        { nome: "Jon Snow", setor: "Game of Thrones" },
+        { nome: "Tyrion Lannister", setor: "Game of Thrones" },
+        { nome: "Jaime Lannister", setor: "Game of Thrones" },
+        { nome: "Fantasma (Ghost)", setor: "Game of Thrones" },
+        { nome: "Drogon", setor: "Game of Thrones" },
+        { nome: "Nymeria", setor: "Game of Thrones" },
+        // The Office
+        { nome: "Pam Beesly", setor: "The Office" },
+        { nome: "Angela Martin", setor: "The Office" },
+        { nome: "Kelly Kapoor", setor: "The Office" },
+        { nome: "Michael Scott", setor: "The Office" },
+        { nome: "Jim Halpert", setor: "The Office" },
+        { nome: "Dwight Schrute", setor: "The Office" },
+        { nome: "Bandit (gato)", setor: "The Office" },
+        { nome: "Princess Lady (gato)", setor: "The Office" },
+        { nome: "Garbage (gato)", setor: "The Office" },
+        // Friends
+        { nome: "Rachel Green", setor: "Friends" },
+        { nome: "Monica Geller", setor: "Friends" },
+        { nome: "Phoebe Buffay", setor: "Friends" },
+        { nome: "Ross Geller", setor: "Friends" },
+        { nome: "Chandler Bing", setor: "Friends" },
+        { nome: "Joey Tribbiani", setor: "Friends" },
+        { nome: "Marcel (macaco)", setor: "Friends" },
+        { nome: "Chick Jr. (pintinho)", setor: "Friends" },
+        { nome: "Duck Jr. (pato)", setor: "Friends" },
+        // Brooklyn Nine-Nine
+        { nome: "Amy Santiago", setor: "Brooklyn Nine-Nine" },
+        { nome: "Rosa Diaz", setor: "Brooklyn Nine-Nine" },
+        { nome: "Gina Linetti", setor: "Brooklyn Nine-Nine" },
+        { nome: "Jake Peralta", setor: "Brooklyn Nine-Nine" },
+        { nome: "Raymond Holt", setor: "Brooklyn Nine-Nine" },
+        { nome: "Terry Jeffords", setor: "Brooklyn Nine-Nine" },
+        { nome: "Cheddar (cão)", setor: "Brooklyn Nine-Nine" },
+        { nome: "Arlo (cão)", setor: "Brooklyn Nine-Nine" },
+        { nome: "Kelly (cão)", setor: "Brooklyn Nine-Nine" },
+        // Stranger Things
+        { nome: "Eleven", setor: "Stranger Things" },
+        { nome: "Max Mayfield", setor: "Stranger Things" },
+        { nome: "Nancy Wheeler", setor: "Stranger Things" },
+        { nome: "Mike Wheeler", setor: "Stranger Things" },
+        { nome: "Dustin Henderson", setor: "Stranger Things" },
+        { nome: "Steve Harrington", setor: "Stranger Things" },
+        { nome: "Mews (gato)", setor: "Stranger Things" },
+        { nome: "Dart (Demodog)", setor: "Stranger Things" },
+        { nome: "Tews (gato)", setor: "Stranger Things" }
     ];
 
-    categorias.forEach(cat => {
-        // Transforma o objeto de contagem num Array e ordena do maior para o menor
-        const ranking = Object.entries(contagem[cat.chave])
-            .map(([nome, total]) => ({ nome, total }))
-            .sort((a, b) => b.total - a.total); // Ordenação Decrescente
+    const SERIES_LISTA = ["Game of Thrones", "The Office", "Friends", "Brooklyn Nine-Nine", "Stranger Things"];
 
-        let html = `
-            <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px;">
-                <h3 style="color: var(--primary-color); border-bottom: 2px solid var(--gold-color); padding-bottom: 10px; margin-top:0;">
-                    Melhor ${cat.titulo}
-                </h3>
-        `;
+    const mapaSetores = {};
+    candidatosData.forEach(c => mapaSetores[c.nome] = c.setor);
 
-        if (ranking.length === 0) {
-            html += `<p style="color: #999;">Nenhum voto registrado ainda.</p>`;
-        } else {
-            html += `<ul style="list-style: none; padding: 0;">`;
-            ranking.forEach((cand, index) => {
-                // Destacar o primeiro lugar
-                const isPrimeiro = index === 0;
-                const estiloLinha = isPrimeiro ? 'font-weight: bold; font-size: 16px; color: var(--text-dark); background: var(--gold-light); padding: 8px; border-radius: 4px;' : 'font-size: 14px; color: var(--text-muted); padding: 4px 8px; border-bottom: 1px solid #eee;';
-                const medalha = isPrimeiro ? '🏆 ' : `${index + 1}º - `;
-                
-                html += `
-                    <li style="display: flex; justify-content: space-between; margin-bottom: 5px; ${estiloLinha}">
-                        <span>${medalha}${cand.nome}</span>
-                        <span>${cand.total} voto(s)</span>
-                    </li>
-                `;
-            });
-            html += `</ul>`;
+    function abrirAba(idAba, elBotao) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(idAba).classList.add('active');
+        if (elBotao) elBotao.classList.add('active');
+    }
+
+    document.getElementById('form-admin-login').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('admin-email').value.trim().toLowerCase();
+        const senha = document.getElementById('admin-senha').value;
+        const btnLogin = document.getElementById('btn-admin-login');
+        const htmlOriginal = btnLogin.innerHTML;
+        btnLogin.innerText = "Autenticando...";
+        btnLogin.disabled = true;
+
+        try {
+            const url = `${supabaseUrl}/rest/v1/admin_users?email=eq.${encodeURIComponent(email)}&select=*`;
+            const resposta = await fetch(url, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } });
+            const admins = await resposta.json();
+
+            if (admins.length > 0 && admins[0].senha === senha) {
+                adminLogado = admins[0];
+                document.getElementById('admin-login-section').style.display = 'none';
+                if (senha === 'admin2026') {
+                    abrirModalSenha(true);
+                } else {
+                    mostrarDashboard();
+                }
+            } else {
+                alert("Acesso negado. Credenciais incorretas.");
+                btnLogin.innerHTML = htmlOriginal;
+                btnLogin.disabled = false;
+            }
+        } catch (erro) {
+            console.error('Erro completo:', erro);
+            alert("Erro ao conectar ao servidor.\n\nDetalhes: " + erro.message);
+            btnLogin.innerHTML = htmlOriginal;
+            btnLogin.disabled = false;
         }
-        
-        html += `</div>`;
-        container.innerHTML += html;
     });
-}
 
-// Botão de atualizar manualmente
-document.getElementById('btn-atualizar').addEventListener('click', carregarApuracao);
+    function mostrarDashboard() {
+        document.getElementById('admin-dashboard-section').style.display = 'block';
+        document.getElementById('nome-admin-logado').innerText = adminLogado.nome;
+        carregarApuracao();
+    }
+
+    function abrirModalSenha(obrigatorio = false) {
+        trocaObrigatoria = obrigatorio;
+        document.getElementById('modal-senha').style.display = 'flex';
+        if(obrigatorio) {
+            document.getElementById('btn-fechar-modal').style.display = 'none';
+            document.getElementById('btn-salvar-senha').style.width = '100%';
+            document.getElementById('titulo-modal-senha').innerText = 'Primeiro Acesso';
+            document.getElementById('desc-modal-senha').innerText = 'Por razões de segurança, defina uma senha pessoal antes de acessar.';
+        } else {
+            document.getElementById('btn-fechar-modal').style.display = 'block';
+            document.getElementById('btn-salvar-senha').style.width = '60%';
+            document.getElementById('titulo-modal-senha').innerText = 'Alterar Senha';
+            document.getElementById('desc-modal-senha').innerText = 'Digite a sua nova senha secreta abaixo.';
+        }
+    }
+
+    document.getElementById('btn-fechar-modal').addEventListener('click', () => {
+        document.getElementById('modal-senha').style.display = 'none';
+        document.getElementById('form-alterar-senha').reset();
+    });
+
+    document.getElementById('form-alterar-senha').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const nova = document.getElementById('nova-senha').value;
+        const confirma = document.getElementById('confirma-nova-senha').value;
+
+        if (nova !== confirma) { alert("As senhas não coincidem."); return; }
+        if (nova.length < 6) { alert("A senha deve ter pelo menos 6 caracteres."); return; }
+
+        const btnSalvar = document.getElementById('btn-salvar-senha');
+        btnSalvar.innerText = "Salvando...";
+        btnSalvar.disabled = true;
+
+        try {
+            const resposta = await fetch(`${supabaseUrl}/rest/v1/admin_users?email=eq.${encodeURIComponent(adminLogado.email)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ senha: nova })
+            });
+
+            if (resposta.ok) {
+                alert("Senha atualizada com sucesso!");
+                adminLogado.senha = nova;
+                document.getElementById('modal-senha').style.display = 'none';
+                document.getElementById('form-alterar-senha').reset();
+                if (trocaObrigatoria) mostrarDashboard();
+            } else { alert("Erro ao salvar."); }
+        } catch (erro) { alert("Erro de comunicação."); } 
+        finally { btnSalvar.innerText = "Salvar Nova Senha"; btnSalvar.disabled = false; }
+    });
+
+    async function carregarApuracao() {
+        const btnAtualizar = document.getElementById('btn-atualizar');
+        const htmlOriginal = btnAtualizar.innerHTML;
+        btnAtualizar.innerText = "A atualizar...";
+        try {
+            const [respVotos, respLogs] = await Promise.all([
+                fetch(`${supabaseUrl}/rest/v1/votos?select=*`, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }),
+                fetch(`${supabaseUrl}/rest/v1/audit_logs?select=*`, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } })
+            ]);
+
+            const votos = await respVotos.json();
+            const logs = await respLogs.json();
+
+            document.getElementById('total-votos').innerText = votos.length;
+            renderizarListasCandidatos(votos); 
+            processarMetricasSetores(votos);
+            renderizarTabelaEleitores(votos);
+            renderizarTabelaLogs(logs);
+        } catch (erro) { alert("Erro ao buscar dados do servidor."); } 
+        finally { btnAtualizar.innerHTML = htmlOriginal; }
+    }
+
+    async function excluirVoto(idVoto, emailEleitor) {
+        if (!confirm(`Tem certeza que deseja ANULAR o voto do e-mail ${emailEleitor}? Esta ação ficará registrada no log de auditoria.`)) {
+            return;
+        }
+
+        try {
+            const respostaVoto = await fetch(`${supabaseUrl}/rest/v1/votos?id=eq.${idVoto}`, {
+                method: 'DELETE',
+                headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+            });
+
+            if (respostaVoto.ok) {
+                await fetch(`${supabaseUrl}/rest/v1/audit_logs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Prefer': 'return=minimal' },
+                    body: JSON.stringify({
+                        admin_email: adminLogado.email,
+                        eleitor_email: emailEleitor,
+                        detalhes: `Voto anulado pelo administrador ${adminLogado.nome} (${adminLogado.email})`
+                    })
+                });
+
+                alert("Voto anulado com sucesso e registado na auditoria!");
+                carregarApuracao(); 
+            } else {
+                alert("Erro ao tentar excluir o voto.");
+            }
+        } catch (erro) {
+            alert("Erro de comunicação com o servidor.");
+        }
+    }
+
+    function renderizarListasCandidatos(votos) {
+        const container = document.getElementById('container-ranking-candidatos');
+        container.innerHTML = ''; 
+        const categorias = [
+            { chave: 'personagem_feminino', titulo: 'Personagem Feminino' },
+            { chave: 'personagem_masculino', titulo: 'Personagem Masculino' },
+            { chave: 'melhor_pet', titulo: 'Melhor Pet' }
+        ];
+
+        categorias.forEach(cat => {
+            const contagem = {};
+            votos.forEach(v => { if (v[cat.chave]) contagem[v[cat.chave]] = (contagem[v[cat.chave]] || 0) + 1; });
+            const ranking = Object.entries(contagem).map(([nome, total]) => ({ nome, total })).sort((a, b) => b.total - a.total);
+            let html = `<div class="chart-box"><h3>${cat.titulo}</h3>`;
+            if (ranking.length === 0) html += `<p style="color: #999; text-align: center;">Nenhum voto.</p>`;
+            else {
+                html += `<ul style="list-style: none; padding: 0;">`;
+                ranking.forEach((cand, i) => {
+                    const isPrimeiro = i === 0;
+                    const estiloLinha = isPrimeiro ? 'font-weight: bold; font-size: 16px; color: var(--text-dark); background: var(--gold-light); padding: 8px; border-radius: 4px;' : 'font-size: 14px; color: var(--text-muted); padding: 4px 8px; border-bottom: 1px solid #eee;';
+                    const prefixo = isPrimeiro ? `${ICON.trophy} ` : `${i + 1}º - `;
+                    html += `<li style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 5px; ${estiloLinha}"><span style="display:flex; align-items:center; gap:6px;">${prefixo}${cand.nome}</span><span>${cand.total} voto(s)</span></li>`;
+                });
+                html += `</ul>`;
+            }
+            html += `</div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    function processarMetricasSetores(votos) {
+        const categoriasComSetor = ['personagem_feminino', 'personagem_masculino', 'melhor_pet'];
+        const votosSetorGeral = {};
+        SERIES_LISTA.forEach(s => votosSetorGeral[s] = 0);
+        
+        const votosSetorPorCat = {};
+        categoriasComSetor.forEach(cat => {
+            votosSetorPorCat[cat] = {};
+            SERIES_LISTA.forEach(s => votosSetorPorCat[cat][s] = 0);
+        });
+
+        votos.forEach(v => {
+            categoriasComSetor.forEach(cat => {
+                const nomeVotado = v[cat];
+                if (nomeVotado && mapaSetores[nomeVotado]) {
+                    votosSetorGeral[mapaSetores[nomeVotado]]++;
+                    votosSetorPorCat[cat][mapaSetores[nomeVotado]]++;
+                }
+            });
+        });
+
+        const arrayGeral = Object.entries(votosSetorGeral).sort((a, b) => b[1] - a[1]);
+        if (arrayGeral.length > 0 && arrayGeral[0][1] > 0) {
+            document.getElementById('insight-setor-mais').innerHTML = `${arrayGeral[0][0]} <span style="font-size:16px; opacity:0.8;">(${arrayGeral[0][1]} votos)</span>`;
+            document.getElementById('insight-setor-menos').innerHTML = `${arrayGeral[arrayGeral.length - 1][0]} <span style="font-size:16px; opacity:0.8;">(${arrayGeral[arrayGeral.length - 1][1]} votos)</span>`;
+        } else {
+            document.getElementById('insight-setor-mais').innerText = 'N/A';
+            document.getElementById('insight-setor-menos').innerText = 'N/A';
+        }
+
+        categoriasComSetor.forEach(cat => {
+            const rankingCat = Object.entries(votosSetorPorCat[cat]).sort((a, b) => b[1] - a[1]);
+            criarGrafico(`chart-setor-${cat}`, rankingCat.map(i => i[0]), rankingCat.map(i => i[1]), '#14B892');
+        });
+    }
+
+    function criarGrafico(canvasId, labels, data, color) {
+        if (graficosAtivos[canvasId]) graficosAtivos[canvasId].destroy();
+        const canvasEl = document.getElementById(canvasId);
+        if (!canvasEl) return;
+        const ctx = canvasEl.getContext('2d');
+        graficosAtivos[canvasId] = new Chart(ctx, { 
+            type: 'bar', 
+            data: { 
+                labels: labels, 
+                datasets: [{ data: data, backgroundColor: color, borderRadius: 4 }] 
+            }, 
+            options: { 
+                responsive: true, 
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, 
+                plugins: { legend: { display: false } } 
+            } 
+        });
+    }
+
+    function renderizarTabelaEleitores(votos) {
+        const tbody = document.querySelector('#tabela-eleitores tbody');
+        tbody.innerHTML = ''; 
+        const votosOrdenados = [...votos].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        if (votosOrdenados.length === 0) return tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum voto registado ainda.</td></tr>';
+        
+        votosOrdenados.forEach(voto => {
+            const dataForm = new Date(voto.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${voto.nome_completo}</strong></td>
+                    <td>${voto.email}</td>
+                    <td>${dataForm}</td>
+                    <td style="text-align: center;">
+                        <button class="btn-excluir" onclick="excluirVoto(${voto.id}, '${voto.email}')">${ICON.trash} Anular</button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    function renderizarTabelaLogs(logs) {
+        const tbody = document.querySelector('#tabela-logs tbody');
+        tbody.innerHTML = ''; 
+        const logsOrdenados = [...logs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        if (logsOrdenados.length === 0) return tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum registo de auditoria até o momento.</td></tr>';
+        
+        logsOrdenados.forEach(log => {
+            const dataForm = new Date(log.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${log.admin_email}</strong></td>
+                    <td>${log.eleitor_email}</td>
+                    <td>${log.detalhes}</td>
+                    <td>${dataForm}</td>
+                </tr>`;
+        });
+    }
+
+    document.getElementById('btn-atualizar').addEventListener('click', carregarApuracao);
+</script>
+</body>
+</html>

@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Apuração - COREN-PE</title>
+    <title>Painel de Apuração - Melhores das Séries</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         .dashboard-container { max-width: 1200px; }
         
-        /* Cabeçalho do Admin */
         .header-admin { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
         
-        /* Modal de Senha */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(23, 18, 43, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
         .modal-content { background: var(--card-bg); padding: 35px 30px; border-radius: var(--radius-lg); width: 90%; max-width: 420px; box-shadow: var(--shadow-md); text-align: center; }
         .modal-content h3 { color: var(--primary-color); font-size: 22px; margin-top: 0; margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; }
@@ -21,7 +19,6 @@
         .input-modal:focus { outline: none; border-color: var(--primary-color); background-color: #fff; box-shadow: 0 0 0 4px var(--primary-light); }
         .btn-modal { margin-top: 10px; }
 
-        /* Abas */
         .tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; flex-wrap: wrap; justify-content: center; }
         .tab-btn { background: transparent; color: var(--text-muted); border: none; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; padding: 10px 20px; cursor: pointer; border-radius: var(--radius-md); box-shadow: none; margin: 0; width: auto; transition: var(--transition); }
         .tab-btn:hover { background: var(--primary-light); color: var(--primary-color); transform: none; box-shadow: none; }
@@ -40,7 +37,6 @@
         .insight-card .valor { font-size: 24px; font-weight: 700; }
         .insight-card.bad { background: linear-gradient(135deg, #6D6483, #17122B); }
 
-        /* Tabelas */
         .table-container { overflow-x: auto; background: #FBFAFE; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-sm); }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
@@ -66,7 +62,7 @@
         <p style="text-align: center; color: var(--text-muted); margin-bottom: 20px;">Área exclusiva para a comissão organizadora.</p>
         <form id="form-admin-login">
             <label for="admin-email">E-mail de Administrador</label>
-            <input type="email" id="admin-email" required placeholder="Ex: admin@coren-pe.gov.br">
+            <input type="email" id="admin-email" required placeholder="Ex: admin@premiacao.com">
 
             <label for="admin-senha">Senha do Painel</label>
             <input type="password" id="admin-senha" required placeholder="Digite a senha de acesso ao painel" style="width: 100%; padding: 14px 16px; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; background-color: #FBFAFE; margin-top: 8px;">
@@ -93,10 +89,10 @@
 
         <!-- Abas -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="abrirAba('aba-candidatos')">Candidatos Mais Votados</button>
-            <button class="tab-btn" onclick="abrirAba('aba-setores')">Métricas por Setor</button>
-            <button class="tab-btn" onclick="abrirAba('aba-eleitores')">Registo de Eleitores</button>
-            <button class="tab-btn" onclick="abrirAba('aba-logs')">📋 Logs de Auditoria</button>
+            <button class="tab-btn active" onclick="abrirAba('aba-candidatos', this)">Candidatos Mais Votados</button>
+            <button class="tab-btn" onclick="abrirAba('aba-setores', this)">Métricas por Série</button>
+            <button class="tab-btn" onclick="abrirAba('aba-eleitores', this)">Registo de Eleitores</button>
+            <button class="tab-btn" onclick="abrirAba('aba-logs', this)">📋 Logs de Auditoria</button>
         </div>
 
         <!-- ABA 1 -->
@@ -108,24 +104,23 @@
         <div id="aba-setores" class="tab-content">
             <div class="insight-cards">
                 <div class="insight-card">
-                    <h4>🌟 Setor Mais Votado (Geral)</h4>
+                    <h4>🌟 Série Mais Votada (Geral)</h4>
                     <div class="valor" id="insight-setor-mais">N/A</div>
                 </div>
                 <div class="insight-card bad">
-                    <h4>📉 Setor Menos Votado (Geral)</h4>
+                    <h4>📉 Série Menos Votada (Geral)</h4>
                     <div class="valor" id="insight-setor-menos">N/A</div>
                 </div>
             </div>
-            <h3 style="text-align: center; color: var(--text-dark); margin-bottom: 20px;">Setores Mais Votados por Categoria</h3>
+            <h3 style="text-align: center; color: var(--text-dark); margin-bottom: 20px;">Séries Mais Votadas por Categoria</h3>
             <div class="dashboard-grid">
-                <div class="chart-box"><h3>Estagiários</h3><canvas id="chart-setor-estagiario"></canvas></div>
-                <div class="chart-box"><h3>Terceirizados</h3><canvas id="chart-setor-terceirizado"></canvas></div>
-                <div class="chart-box"><h3>Comissionados</h3><canvas id="chart-setor-comissionado"></canvas></div>
-                <div class="chart-box"><h3>Funcionários</h3><canvas id="chart-setor-funcionario"></canvas></div>
+                <div class="chart-box"><h3>Personagem Feminino</h3><canvas id="chart-setor-personagem_feminino"></canvas></div>
+                <div class="chart-box"><h3>Personagem Masculino</h3><canvas id="chart-setor-personagem_masculino"></canvas></div>
+                <div class="chart-box"><h3>Melhor Pet</h3><canvas id="chart-setor-melhor_pet"></canvas></div>
             </div>
         </div>
 
-        <!-- ABA 3 (ELEITORES E EXCLUSÃO) -->
+        <!-- ABA 3 -->
         <div id="aba-eleitores" class="tab-content">
             <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--text-dark);">Auditoria e Gestão de Votos</h2>
             <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Caso algum voto precise ser anulado (ex: erro no preenchimento ou contestação de e-mail), pode excluí-lo abaixo para liberar o eleitor a votar novamente.</p>
@@ -135,7 +130,7 @@
                     <thead>
                         <tr>
                             <th>Nome do Eleitor</th>
-                            <th>E-mail Institucional</th>
+                            <th>E-mail</th>
                             <th>Data e Hora</th>
                             <th style="text-align: center;">Ações</th>
                         </tr>
@@ -145,7 +140,7 @@
             </div>
         </div>
 
-        <!-- ABA 4 (LOGS DE AUDITORIA) -->
+        <!-- ABA 4 -->
         <div id="aba-logs" class="tab-content">
             <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--text-dark);">Histórico de Anulações (Logs)</h2>
             <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Registo imutável de quais administradores anularam votos e quando.</p>
@@ -188,47 +183,76 @@
 </div>
 
 <script>
-    const supabaseUrl = 'https://cnptvjdzqfsqbdkrnbbe.supabase.co';
-    const supabaseKey = 'sb_publishable_cCqmjnqgdSvOcKA6oyd28Q_4BpE1hQ6';
+    // ⚠️ SUBSTITUA PELAS SUAS NOVAS CREDENCIAIS DO SUPABASE
+    const supabaseUrl = 'https://ypyhbuoglipxsyazsxoj.supabase.co';
+    const supabaseKey = 'sb_publishable_ufcIVBj-f_fHQqnecaxEfw_50Cslvyx';
     let graficosAtivos = {};
     let adminLogado = null;
     let trocaObrigatoria = false;
 
     const candidatosData = [
-        { nome: "Mariana Costa", setor: "ASPLAQ" }, { nome: "João Vítor", setor: "ASPLAQ" }, { nome: "Beatriz Souza", setor: "ASPLAQ" },
-        { nome: "João Pedro Silva", setor: "ASPLAQ" }, { nome: "Carla Dias", setor: "ASPLAQ" }, { nome: "Rodrigo Alves", setor: "ASPLAQ" },
-        { nome: "Carlos Eduardo", setor: "ASPLAQ" }, { nome: "Amanda Nogueira", setor: "ASPLAQ" }, { nome: "Felipe Rocha", setor: "ASPLAQ" },
-        { nome: "Roberto Alves", setor: "ASPLAQ" }, { nome: "Camila Fernandes", setor: "ASPLAQ" }, { nome: "Tiago Ribeiro", setor: "ASPLAQ" },
-        
-        { nome: "Luiz Gabriel Sarmento", setor: "Tecnologia da Informação" }, { nome: "Paulo Barroca", setor: "Tecnologia da Informação" }, { nome: "Ana Clara", setor: "Tecnologia da Informação" },
-        { nome: "Marcos Vinícius", setor: "Tecnologia da Informação" }, { nome: "Letícia Gomes", setor: "Tecnologia da Informação" }, { nome: "Bruno Henrique", setor: "Tecnologia da Informação" },
-        { nome: "Felipe Costa", setor: "Tecnologia da Informação" }, { nome: "Juliana Almeida", setor: "Tecnologia da Informação" }, { nome: "Ricardo Fontes", setor: "Tecnologia da Informação" },
-        { nome: "Ricardo Silva", setor: "Tecnologia da Informação" }, { nome: "Vanessa Martins", setor: "Tecnologia da Informação" }, { nome: "André Castro", setor: "Tecnologia da Informação" },
-
-        { nome: "Sofia Almeida", setor: "Comunicação" }, { nome: "Pedro Lucas", setor: "Comunicação" }, { nome: "Laura Monteiro", setor: "Comunicação" },
-        { nome: "Lucas Mendes", setor: "Comunicação" }, { nome: "Thaís Pereira", setor: "Comunicação" }, { nome: "Renato Góes", setor: "Comunicação" },
-        { nome: "Fernanda Lima", setor: "Comunicação" }, { nome: "Diego Souza", setor: "Comunicação" }, { nome: "Bianca Castro", setor: "Comunicação" },
-        { nome: "Thiago Martins", setor: "Comunicação" }, { nome: "Natália Ribeiro", setor: "Comunicação" }, { nome: "Gustavo Lima", setor: "Comunicação" },
-
-        { nome: "Pedro Henrique", setor: "DLCC" }, { nome: "Alice Farias", setor: "DLCC" }, { nome: "Mateus Costa", setor: "DLCC" },
-        { nome: "Gabriela Nunes", setor: "DLCC" }, { nome: "Rafael Almeida", setor: "DLCC" }, { nome: "Mariana Barros", setor: "DLCC" },
-        { nome: "Rafael Gomes", setor: "DLCC" }, { nome: "Carolina Mendes", setor: "DLCC" }, { nome: "Fernando Souza", setor: "DLCC" },
-        { nome: "Amanda Freitas", setor: "DLCC" }, { nome: "Leandro Carvalho", setor: "DLCC" }, { nome: "Priscila Rocha", setor: "DLCC" },
-
-        { nome: "Letícia Carvalho", setor: "PROGER" }, { nome: "Cauã Silva", setor: "PROGER" }, { nome: "Isadora Martins", setor: "PROGER" },
-        { nome: "Diego Monteiro", setor: "PROGER" }, { nome: "Renata Alves", setor: "PROGER" }, { nome: "Samuel Costa", setor: "PROGER" },
-        { nome: "Patrícia Santos", setor: "PROGER" }, { nome: "Vinícius Rocha", setor: "PROGER" }, { nome: "Tatiana Lima", setor: "PROGER" },
-        { nome: "Luciana Dias", setor: "PROGER" }, { nome: "Márcio Silva", setor: "PROGER" }, { nome: "Eliane Costa", setor: "PROGER" }
+        // Game of Thrones
+        { nome: "Daenerys Targaryen", setor: "Game of Thrones" },
+        { nome: "Arya Stark", setor: "Game of Thrones" },
+        { nome: "Cersei Lannister", setor: "Game of Thrones" },
+        { nome: "Jon Snow", setor: "Game of Thrones" },
+        { nome: "Tyrion Lannister", setor: "Game of Thrones" },
+        { nome: "Jaime Lannister", setor: "Game of Thrones" },
+        { nome: "Fantasma (Ghost)", setor: "Game of Thrones" },
+        { nome: "Drogon", setor: "Game of Thrones" },
+        { nome: "Nymeria", setor: "Game of Thrones" },
+        // The Office
+        { nome: "Pam Beesly", setor: "The Office" },
+        { nome: "Angela Martin", setor: "The Office" },
+        { nome: "Kelly Kapoor", setor: "The Office" },
+        { nome: "Michael Scott", setor: "The Office" },
+        { nome: "Jim Halpert", setor: "The Office" },
+        { nome: "Dwight Schrute", setor: "The Office" },
+        { nome: "Bandit (gato)", setor: "The Office" },
+        { nome: "Princess Lady (gato)", setor: "The Office" },
+        { nome: "Garbage (gato)", setor: "The Office" },
+        // Friends
+        { nome: "Rachel Green", setor: "Friends" },
+        { nome: "Monica Geller", setor: "Friends" },
+        { nome: "Phoebe Buffay", setor: "Friends" },
+        { nome: "Ross Geller", setor: "Friends" },
+        { nome: "Chandler Bing", setor: "Friends" },
+        { nome: "Joey Tribbiani", setor: "Friends" },
+        { nome: "Marcel (macaco)", setor: "Friends" },
+        { nome: "Chick Jr. (pintinho)", setor: "Friends" },
+        { nome: "Duck Jr. (pato)", setor: "Friends" },
+        // Brooklyn Nine-Nine
+        { nome: "Amy Santiago", setor: "Brooklyn Nine-Nine" },
+        { nome: "Rosa Diaz", setor: "Brooklyn Nine-Nine" },
+        { nome: "Gina Linetti", setor: "Brooklyn Nine-Nine" },
+        { nome: "Jake Peralta", setor: "Brooklyn Nine-Nine" },
+        { nome: "Raymond Holt", setor: "Brooklyn Nine-Nine" },
+        { nome: "Terry Jeffords", setor: "Brooklyn Nine-Nine" },
+        { nome: "Cheddar (cão)", setor: "Brooklyn Nine-Nine" },
+        { nome: "Arlo (cão)", setor: "Brooklyn Nine-Nine" },
+        { nome: "Kelly (cão)", setor: "Brooklyn Nine-Nine" },
+        // Stranger Things
+        { nome: "Eleven", setor: "Stranger Things" },
+        { nome: "Max Mayfield", setor: "Stranger Things" },
+        { nome: "Nancy Wheeler", setor: "Stranger Things" },
+        { nome: "Mike Wheeler", setor: "Stranger Things" },
+        { nome: "Dustin Henderson", setor: "Stranger Things" },
+        { nome: "Steve Harrington", setor: "Stranger Things" },
+        { nome: "Mews (gato)", setor: "Stranger Things" },
+        { nome: "Dart (Demodog)", setor: "Stranger Things" },
+        { nome: "Tews (gato)", setor: "Stranger Things" }
     ];
+
+    const SERIES_LISTA = ["Game of Thrones", "The Office", "Friends", "Brooklyn Nine-Nine", "Stranger Things"];
 
     const mapaSetores = {};
     candidatosData.forEach(c => mapaSetores[c.nome] = c.setor);
 
-    function abrirAba(idAba) {
+    function abrirAba(idAba, elBotao) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(idAba).classList.add('active');
-        event.currentTarget.classList.add('active');
+        if (elBotao) elBotao.classList.add('active');
     }
 
     document.getElementById('form-admin-login').addEventListener('submit', async function(e) {
@@ -247,7 +271,7 @@
             if (admins.length > 0 && admins[0].senha === senha) {
                 adminLogado = admins[0];
                 document.getElementById('admin-login-section').style.display = 'none';
-                if (senha === 'coren2026') {
+                if (senha === 'admin2026') {
                     abrirModalSenha(true);
                 } else {
                     mostrarDashboard();
@@ -325,7 +349,6 @@
         const btnAtualizar = document.getElementById('btn-atualizar');
         btnAtualizar.innerText = "A atualizar...";
         try {
-            // Busca votos e logs simultaneamente
             const [respVotos, respLogs] = await Promise.all([
                 fetch(`${supabaseUrl}/rest/v1/votos?select=*`, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }),
                 fetch(`${supabaseUrl}/rest/v1/audit_logs?select=*`, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } })
@@ -343,21 +366,18 @@
         finally { btnAtualizar.innerText = "🔄 Atualizar Resultados em Tempo Real"; }
     }
 
-    // FUNÇÃO DE EXCLUIR VOTO COM REGISTO DE LOGS
     async function excluirVoto(idVoto, emailEleitor) {
         if (!confirm(`Tem certeza que deseja ANULAR o voto do e-mail ${emailEleitor}? Esta ação ficará registrada no log de auditoria.`)) {
             return;
         }
 
         try {
-            // 1. Apaga o voto
             const respostaVoto = await fetch(`${supabaseUrl}/rest/v1/votos?id=eq.${idVoto}`, {
                 method: 'DELETE',
                 headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
             });
 
             if (respostaVoto.ok) {
-                // 2. Grava o registo na tabela de logs
                 await fetch(`${supabaseUrl}/rest/v1/audit_logs`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Prefer': 'return=minimal' },
@@ -382,9 +402,9 @@
         const container = document.getElementById('container-ranking-candidatos');
         container.innerHTML = ''; 
         const categorias = [
-            { chave: 'estagiario', titulo: 'Estagiário' }, { chave: 'terceirizado', titulo: 'Terceirizado' },
-            { chave: 'comissionado', titulo: 'Comissionado' }, { chave: 'conselheiro', titulo: 'Conselheiro' },
-            { chave: 'funcionario', titulo: 'Funcionário' }
+            { chave: 'personagem_feminino', titulo: 'Personagem Feminino' },
+            { chave: 'personagem_masculino', titulo: 'Personagem Masculino' },
+            { chave: 'melhor_pet', titulo: 'Melhor Pet' }
         ];
 
         categorias.forEach(cat => {
@@ -408,10 +428,15 @@
     }
 
     function processarMetricasSetores(votos) {
-        const categoriasComSetor = ['estagiario', 'terceirizado', 'comissionado', 'funcionario'];
-        const votosSetorGeral = { "ASPLAQ": 0, "Tecnologia da Informação": 0, "Comunicação": 0, "DLCC": 0, "PROGER": 0 };
-        const votosSetorPorCat = { estagiario: {}, terceirizado: {}, comissionado: {}, funcionario: {} };
-        categoriasComSetor.forEach(cat => { votosSetorPorCat[cat] = { "ASPLAQ": 0, "Tecnologia da Informação": 0, "Comunicação": 0, "DLCC": 0, "PROGER": 0 }; });
+        const categoriasComSetor = ['personagem_feminino', 'personagem_masculino', 'melhor_pet'];
+        const votosSetorGeral = {};
+        SERIES_LISTA.forEach(s => votosSetorGeral[s] = 0);
+        
+        const votosSetorPorCat = {};
+        categoriasComSetor.forEach(cat => {
+            votosSetorPorCat[cat] = {};
+            SERIES_LISTA.forEach(s => votosSetorPorCat[cat][s] = 0);
+        });
 
         votos.forEach(v => {
             categoriasComSetor.forEach(cat => {
@@ -427,6 +452,9 @@
         if (arrayGeral.length > 0 && arrayGeral[0][1] > 0) {
             document.getElementById('insight-setor-mais').innerHTML = `${arrayGeral[0][0]} <span style="font-size:16px; opacity:0.8;">(${arrayGeral[0][1]} votos)</span>`;
             document.getElementById('insight-setor-menos').innerHTML = `${arrayGeral[arrayGeral.length - 1][0]} <span style="font-size:16px; opacity:0.8;">(${arrayGeral[arrayGeral.length - 1][1]} votos)</span>`;
+        } else {
+            document.getElementById('insight-setor-mais').innerText = 'N/A';
+            document.getElementById('insight-setor-menos').innerText = 'N/A';
         }
 
         categoriasComSetor.forEach(cat => {
@@ -437,14 +465,27 @@
 
     function criarGrafico(canvasId, labels, data, color) {
         if (graficosAtivos[canvasId]) graficosAtivos[canvasId].destroy();
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        graficosAtivos[canvasId] = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ data: data, backgroundColor: color, borderRadius: 4 }] }, options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } } });
+        const canvasEl = document.getElementById(canvasId);
+        if (!canvasEl) return;
+        const ctx = canvasEl.getContext('2d');
+        graficosAtivos[canvasId] = new Chart(ctx, { 
+            type: 'bar', 
+            data: { 
+                labels: labels, 
+                datasets: [{ data: data, backgroundColor: color, borderRadius: 4 }] 
+            }, 
+            options: { 
+                responsive: true, 
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, 
+                plugins: { legend: { display: false } } 
+            } 
+        });
     }
 
     function renderizarTabelaEleitores(votos) {
         const tbody = document.querySelector('#tabela-eleitores tbody');
         tbody.innerHTML = ''; 
-        const votosOrdenados = votos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const votosOrdenados = [...votos].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         if (votosOrdenados.length === 0) return tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum voto registado ainda.</td></tr>';
         
         votosOrdenados.forEach(voto => {
@@ -464,7 +505,7 @@
     function renderizarTabelaLogs(logs) {
         const tbody = document.querySelector('#tabela-logs tbody');
         tbody.innerHTML = ''; 
-        const logsOrdenados = logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const logsOrdenados = [...logs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         if (logsOrdenados.length === 0) return tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum registo de auditoria até o momento.</td></tr>';
         
         logsOrdenados.forEach(log => {

@@ -29,12 +29,7 @@
     --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-/* Reset e Configurações Globais */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     font-family: 'Inter', sans-serif;
@@ -47,7 +42,6 @@ body {
     padding: 40px 20px;
 }
 
-/* Container Principal */
 .container {
     background: var(--card-bg);
     width: 100%;
@@ -59,41 +53,30 @@ body {
     overflow: visible;
 }
 
-/* Faixa superior tipo "bandeirinha de festa" */
 .container::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 10px;
+    top: 0; left: 0;
+    width: 100%; height: 10px;
     border-radius: 28px 28px 0 0;
-    background: repeating-linear-gradient(
-        135deg,
+    background: repeating-linear-gradient(135deg,
         var(--primary-color) 0 20px,
         var(--accent-color) 20px 40px,
         var(--gold-color) 40px 60px,
-        var(--mint-color) 60px 80px
-    );
+        var(--mint-color) 60px 80px);
 }
 
-/* Medalha de identidade — reforça o tema de premiação, com "confete" ao redor */
 .container::after {
     content: '★';
     position: absolute;
-    top: -26px;
-    left: 50%;
-    width: 54px;
-    height: 54px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    top: -26px; left: 50%;
+    width: 54px; height: 54px;
+    display: flex; align-items: center; justify-content: center;
     background: linear-gradient(145deg, #FFD36E 0%, var(--gold-color) 100%);
     color: #8A5A00;
     border-radius: 50%;
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 22px;
-    font-weight: 700;
+    font-size: 22px; font-weight: 700;
     z-index: 2;
     transform: translateX(-50%) rotate(-8deg);
     box-shadow:
@@ -112,11 +95,9 @@ body {
     100% { transform: translateX(-50%) scale(1) rotate(-8deg); opacity: 1; }
 }
 
-/* Títulos */
 h1 {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 28px;
-    font-weight: 700;
+    font-size: 28px; font-weight: 700;
     color: var(--text-dark);
     text-align: center;
     margin-bottom: 30px;
@@ -125,8 +106,7 @@ h1 {
 
 h2 {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 21px;
-    font-weight: 600;
+    font-size: 21px; font-weight: 600;
     color: var(--text-dark);
     margin: 40px 0 20px;
     padding-bottom: 14px;
@@ -136,31 +116,25 @@ h2 {
 h2::after {
     content: '';
     position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 44px;
-    height: 4px;
+    left: 0; bottom: 0;
+    width: 44px; height: 4px;
     border-radius: 4px;
     background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--gold-color));
 }
 
 h3 {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 15px; font-weight: 600;
     color: var(--text-muted);
     margin: 20px 0 12px;
 }
 
-/* Secções de Acesso e Votação */
 #votacao-section { display: none; }
 #login-section { max-width: 400px; margin: 0 auto; }
 #login-section h2 { text-align: center; padding-bottom: 12px; margin-top: 0; }
 #login-section h2::after { left: 50%; transform: translateX(-50%); }
 
-/* Formulários e Inputs */
 label {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 14px; font-weight: 600;
     color: var(--text-muted);
     display: block;
     margin-bottom: 8px;
@@ -186,7 +160,6 @@ input[type="text"]:focus, input[type="email"]:focus {
     box-shadow: 0 0 0 4px var(--primary-light);
 }
 
-/* Botões */
 button {
     width: 100%;
     padding: 16px;
@@ -195,8 +168,7 @@ button {
     color: white;
     border: none;
     border-radius: var(--radius-pill);
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 16px; font-weight: 600;
     font-family: inherit;
     cursor: pointer;
     transition: var(--transition);
@@ -209,13 +181,9 @@ button:hover {
     box-shadow: 0 14px 24px rgba(109,76,224,0.32);
 }
 
-button:active {
-    transform: translateY(0);
-}
-
+button:active { transform: translateY(0); }
 button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: none; box-shadow: none; }
 
-/* Grid de Cartões de Votação */
 .grid-candidatos {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -223,9 +191,7 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     margin-bottom: 10px;
 }
 
-.grid-candidatos input[type="radio"] {
-    display: none;
-}
+.grid-candidatos input[type="radio"] { display: none; }
 
 .card-candidato {
     background: var(--card-bg);
@@ -250,8 +216,7 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
 }
 
 .card-candidato img {
-    width: 88px;
-    height: 88px;
+    width: 88px; height: 88px;
     border-radius: 50%;
     object-fit: cover;
     margin-bottom: 15px;
@@ -268,20 +233,14 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     line-height: 1.4;
 }
 
-/* Selo de "vencedor" */
 .card-candidato::after {
     content: '★';
     position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 26px;
-    height: 26px;
+    top: 10px; right: 10px;
+    width: 26px; height: 26px;
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: bold;
     color: #8A5A00;
     background: linear-gradient(145deg, #FFD36E 0%, var(--gold-color) 100%);
     opacity: 0;
@@ -307,7 +266,6 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     box-shadow: 0 4px 10px rgba(245,166,35,0.45);
 }
 
-/* --- Estilos do Passo a Passo (Wizard) --- */
 .progress-wrapper {
     margin-bottom: 30px;
     background: var(--primary-light);
@@ -319,8 +277,7 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     display: flex;
     justify-content: space-between;
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 14px; font-weight: 600;
     color: var(--text-dark);
     margin-bottom: 10px;
 }
@@ -340,9 +297,7 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.etapa-votacao {
-    animation: slideIn 0.4s ease forwards;
-}
+.etapa-votacao { animation: slideIn 0.4s ease forwards; }
 
 @keyframes slideIn {
     from { opacity: 0; transform: translateX(20px); }
@@ -357,10 +312,7 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     border-top: 1px solid var(--border-color);
 }
 
-.navegacao-botoes button {
-    margin-top: 0;
-    flex: 1;
-}
+.navegacao-botoes button { margin-top: 0; flex: 1; }
 
 .btn-secundario {
     background-color: transparent;
@@ -403,10 +355,6 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     margin-top: 6px;
 }
 
-/* -------------------------------------------------------------
-   SEÇÃO ADICIONADA: ESTILOS DO RESUMO / RECIBO DE VOTAÇÃO
--------------------------------------------------------------- */
-
 .resumo-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -434,8 +382,7 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
 }
 
 .resumo-card img {
-    width: 80px;
-    height: 80px;
+    width: 80px; height: 80px;
     border-radius: 50%;
     margin: 12px 0;
     border: 3px solid #fff;
@@ -462,7 +409,6 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     margin-top: 5px;
 }
 
-/* Mensagem de Sucesso alinhada ao design */
 #mensagem-sucesso {
     text-align: center;
     padding: 24px;
@@ -485,10 +431,6 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     font-size: 15px;
 }
 
-/* -------------------------------------------------------------
-   ACESSIBILIDADE E RESPONSIVIDADE
--------------------------------------------------------------- */
-
 @media (prefers-reduced-motion: reduce) {
     .container::after { animation: none; }
     .etapa-votacao { animation: none; }
@@ -498,8 +440,7 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
 @media (max-width: 600px) {
     .container { padding: 48px 20px 25px; }
     .container::after {
-        width: 46px;
-        height: 46px;
+        width: 46px; height: 46px;
         font-size: 18px;
         top: -22px;
         box-shadow:

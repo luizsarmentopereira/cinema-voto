@@ -1,96 +1,72 @@
-const supabaseUrl = 'https://cnptvjdzqfsqbdkrnbbe.supabase.co';
-const supabaseKey = 'sb_publishable_cCqmjnqgdSvOcKA6oyd28Q_4BpE1hQ6';
+// ⚠️ SUBSTITUA PELAS SUAS NOVAS CREDENCIAIS DO SUPABASE
+const supabaseUrl = 'https://ypyhbuoglipxsyazsxoj.supabase.co';
+const supabaseKey = 'sb_publishable_ufcIVBj-f_fHQqnecaxEfw_50Cslvyx';
 
-// MANTENHA A SUA ARRAY "candidatosData" COMPLETA AQUI
+// ============================================================
+// CANDIDATOS POR SÉRIE E CATEGORIA
+// ============================================================
 const candidatosData = [
-    // === ASPLAQ ===
-    { id: "c1", nome: "Mariana Costa", cargo: "Estagiário", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Mariana+Costa&background=random&color=fff" },
-    { id: "c2", nome: "João Vítor", cargo: "Estagiário", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Joao+Vitor&background=random&color=fff" },
-    { id: "c3", nome: "Beatriz Souza", cargo: "Estagiário", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Beatriz+Souza&background=random&color=fff" },
-    { id: "c4", nome: "João Pedro Silva", cargo: "Terceirizado", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Joao+Pedro&background=random&color=fff" },
-    { id: "c5", nome: "Carla Dias", cargo: "Terceirizado", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Carla+Dias&background=random&color=fff" },
-    { id: "c6", nome: "Rodrigo Alves", cargo: "Terceirizado", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Rodrigo+Alves&background=random&color=fff" },
-    { id: "c7", nome: "Carlos Eduardo", cargo: "Comissionado", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Carlos+Eduardo&background=random&color=fff" },
-    { id: "c8", nome: "Amanda Nogueira", cargo: "Comissionado", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Amanda+Nogueira&background=random&color=fff" },
-    { id: "c9", nome: "Felipe Rocha", cargo: "Comissionado", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Felipe+Rocha&background=random&color=fff" },
-    { id: "c10", nome: "Dra. Juliana Souza", cargo: "Conselheiro", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Juliana+Souza&background=random&color=fff" },
-    { id: "c11", nome: "Dr. Renato Mendes", cargo: "Conselheiro", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Renato+Mendes&background=random&color=fff" },
-    { id: "c12", nome: "Dra. Patrícia Lima", cargo: "Conselheiro", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Patricia+Lima&background=random&color=fff" },
-    { id: "c13", nome: "Roberto Alves", cargo: "Funcionário", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Roberto+Alves&background=random&color=fff" },
-    { id: "c14", nome: "Camila Fernandes", cargo: "Funcionário", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Camila+Fernandes&background=random&color=fff" },
-    { id: "c15", nome: "Tiago Ribeiro", cargo: "Funcionário", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Tiago+Ribeiro&background=random&color=fff" },
+    // ============ GAME OF THRONES ============
+    // Personagem Feminino
+    { id: "got-f1", nome: "Daenerys Targaryen", cargo: "Personagem Feminino", setor: "Game of Thrones", foto: "https://ui-avatars.com/api/?name=Daenerys+Targaryen&background=E91E63&color=fff&bold=true" },
+    { id: "got-f2", nome: "Arya Stark",            cargo: "Personagem Feminino", setor: "Game of Thrones", foto: "https://ui-avatars.com/api/?name=Arya+Stark&background=E91E63&color=fff&bold=true" },
+    { id: "got-f3", nome: "Cersei Lannister",      cargo: "Personagem Feminino", setor: "Game of Thrones", foto: "https://ui-avatars.com/api/?name=Cersei+Lannister&background=E91E63&color=fff&bold=true" },
+    // Personagem Masculino
+    { id: "got-m1", nome: "Jon Snow",              cargo: "Personagem Masculino", setor: "Game of Thrones", foto: "https://ui-avatars.com/api/?name=Jon+Snow&background=3F51B5&color=fff&bold=true" },
+    { id: "got-m2", nome: "Tyrion Lannister",      cargo: "Personagem Masculino", setor: "Game of Thrones", foto: "https://ui-avatars.com/api/?name=Tyrion+Lannister&background=3F51B5&color=fff&bold=true" },
+    { id: "got-m3", nome: "Jaime Lannister",       cargo: "Personagem Masculino", setor: "Game of Thrones", foto: "https://ui-avatars.com/api/?name=Jaime+Lannister&background=3F51B5&color=fff&bold=true" },
+    // Melhor Pet
+    { id: "got-p1", nome: "Fantasma (Ghost)",      cargo: "Melhor Pet", setor: "Game of Thrones", foto: "https://ui-avatars.com/api/?name=Fantasma&background=9E9E9E&color=fff&bold=true" },
+    { id: "got-p2", nome: "Drogon",                cargo: "Melhor Pet", setor: "Game of Thrones", foto: "https://ui-avatars.com/api/?name=Drogon&background=9E9E9E&color=fff&bold=true" },
+    { id: "got-p3", nome: "Nymeria",               cargo: "Melhor Pet", setor: "Game of Thrones", foto: "https://ui-avatars.com/api/?name=Nymeria&background=9E9E9E&color=fff&bold=true" },
 
-    // === Tecnologia da Informação ===
-    { id: "c16", nome: "Luiz Gabriel Sarmento", cargo: "Estagiário", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Luiz+Gabriel&background=random&color=fff" },
-    { id: "c17", nome: "Paulo Barroca", cargo: "Estagiário", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Paulo+Barroca&background=random&color=fff" },
-    { id: "c18", nome: "Ana Clara", cargo: "Estagiário", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Ana+Clara&background=random&color=fff" },
-    { id: "c19", nome: "Marcos Vinícius", cargo: "Terceirizado", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Marcos+Vinicius&background=random&color=fff" },
-    { id: "c20", nome: "Letícia Gomes", cargo: "Terceirizado", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Leticia+Gomes&background=random&color=fff" },
-    { id: "c21", nome: "Bruno Henrique", cargo: "Terceirizado", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Bruno+Henrique&background=random&color=fff" },
-    { id: "c22", nome: "Felipe Costa", cargo: "Comissionado", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Felipe+Costa&background=random&color=fff" },
-    { id: "c23", nome: "Juliana Almeida", cargo: "Comissionado", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Juliana+Almeida&background=random&color=fff" },
-    { id: "c24", nome: "Ricardo Fontes", cargo: "Comissionado", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Ricardo+Fontes&background=random&color=fff" },
-    { id: "c25", nome: "Dr. Marcos Lima", cargo: "Conselheiro", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Marcos+Lima&background=random&color=fff" },
-    { id: "c26", nome: "Dra. Fernanda Costa", cargo: "Conselheiro", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Fernanda+Costa&background=random&color=fff" },
-    { id: "c27", nome: "Dr. Eduardo Silva", cargo: "Conselheiro", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Eduardo+Silva&background=random&color=fff" },
-    { id: "c28", nome: "Ricardo Silva", cargo: "Funcionário", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Ricardo+Silva&background=random&color=fff" },
-    { id: "c29", nome: "Vanessa Martins", cargo: "Funcionário", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Vanessa+Martins&background=random&color=fff" },
-    { id: "c30", nome: "André Castro", cargo: "Funcionário", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Andre+Castro&background=random&color=fff" },
+    // ============ THE OFFICE ============
+    { id: "off-f1", nome: "Pam Beesly",            cargo: "Personagem Feminino", setor: "The Office", foto: "https://ui-avatars.com/api/?name=Pam+Beesly&background=E91E63&color=fff&bold=true" },
+    { id: "off-f2", nome: "Angela Martin",         cargo: "Personagem Feminino", setor: "The Office", foto: "https://ui-avatars.com/api/?name=Angela+Martin&background=E91E63&color=fff&bold=true" },
+    { id: "off-f3", nome: "Kelly Kapoor",          cargo: "Personagem Feminino", setor: "The Office", foto: "https://ui-avatars.com/api/?name=Kelly+Kapoor&background=E91E63&color=fff&bold=true" },
+    { id: "off-m1", nome: "Michael Scott",         cargo: "Personagem Masculino", setor: "The Office", foto: "https://ui-avatars.com/api/?name=Michael+Scott&background=3F51B5&color=fff&bold=true" },
+    { id: "off-m2", nome: "Jim Halpert",           cargo: "Personagem Masculino", setor: "The Office", foto: "https://ui-avatars.com/api/?name=Jim+Halpert&background=3F51B5&color=fff&bold=true" },
+    { id: "off-m3", nome: "Dwight Schrute",        cargo: "Personagem Masculino", setor: "The Office", foto: "https://ui-avatars.com/api/?name=Dwight+Schrute&background=3F51B5&color=fff&bold=true" },
+    { id: "off-p1", nome: "Bandit (gato)",         cargo: "Melhor Pet", setor: "The Office", foto: "https://ui-avatars.com/api/?name=Bandit&background=9E9E9E&color=fff&bold=true" },
+    { id: "off-p2", nome: "Princess Lady (gato)",  cargo: "Melhor Pet", setor: "The Office", foto: "https://ui-avatars.com/api/?name=Princess+Lady&background=9E9E9E&color=fff&bold=true" },
+    { id: "off-p3", nome: "Garbage (gato)",        cargo: "Melhor Pet", setor: "The Office", foto: "https://ui-avatars.com/api/?name=Garbage&background=9E9E9E&color=fff&bold=true" },
 
-    // === Comunicação ===
-    { id: "c31", nome: "Sofia Almeida", cargo: "Estagiário", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Sofia+Almeida&background=random&color=fff" },
-    { id: "c32", nome: "Pedro Lucas", cargo: "Estagiário", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Pedro+Lucas&background=random&color=fff" },
-    { id: "c33", nome: "Laura Monteiro", cargo: "Estagiário", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Laura+Monteiro&background=random&color=fff" },
-    { id: "c34", nome: "Lucas Mendes", cargo: "Terceirizado", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Lucas+Mendes&background=random&color=fff" },
-    { id: "c35", nome: "Thaís Pereira", cargo: "Terceirizado", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Thais+Pereira&background=random&color=fff" },
-    { id: "c36", nome: "Renato Góes", cargo: "Terceirizado", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Renato+Goes&background=random&color=fff" },
-    { id: "c37", nome: "Fernanda Lima", cargo: "Comissionado", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Fernanda+Lima&background=random&color=fff" },
-    { id: "c38", nome: "Diego Souza", cargo: "Comissionado", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Diego+Souza&background=random&color=fff" },
-    { id: "c39", nome: "Bianca Castro", cargo: "Comissionado", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Bianca+Castro&background=random&color=fff" },
-    { id: "c40", nome: "Dra. Camila Rocha", cargo: "Conselheiro", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Camila+Rocha&background=random&color=fff" },
-    { id: "c41", nome: "Dr. Henrique Viana", cargo: "Conselheiro", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Henrique+Viana&background=random&color=fff" },
-    { id: "c42", nome: "Dra. Alice Borges", cargo: "Conselheiro", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Alice+Borges&background=random&color=fff" },
-    { id: "c43", nome: "Thiago Martins", cargo: "Funcionário", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Thiago+Martins&background=random&color=fff" },
-    { id: "c44", nome: "Natália Ribeiro", cargo: "Funcionário", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Natalia+Ribeiro&background=random&color=fff" },
-    { id: "c45", nome: "Gustavo Lima", cargo: "Funcionário", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Gustavo+Lima&background=random&color=fff" },
+    // ============ FRIENDS ============
+    { id: "fr-f1", nome: "Rachel Green",           cargo: "Personagem Feminino", setor: "Friends", foto: "https://ui-avatars.com/api/?name=Rachel+Green&background=E91E63&color=fff&bold=true" },
+    { id: "fr-f2", nome: "Monica Geller",          cargo: "Personagem Feminino", setor: "Friends", foto: "https://ui-avatars.com/api/?name=Monica+Geller&background=E91E63&color=fff&bold=true" },
+    { id: "fr-f3", nome: "Phoebe Buffay",          cargo: "Personagem Feminino", setor: "Friends", foto: "https://ui-avatars.com/api/?name=Phoebe+Buffay&background=E91E63&color=fff&bold=true" },
+    { id: "fr-m1", nome: "Ross Geller",            cargo: "Personagem Masculino", setor: "Friends", foto: "https://ui-avatars.com/api/?name=Ross+Geller&background=3F51B5&color=fff&bold=true" },
+    { id: "fr-m2", nome: "Chandler Bing",          cargo: "Personagem Masculino", setor: "Friends", foto: "https://ui-avatars.com/api/?name=Chandler+Bing&background=3F51B5&color=fff&bold=true" },
+    { id: "fr-m3", nome: "Joey Tribbiani",         cargo: "Personagem Masculino", setor: "Friends", foto: "https://ui-avatars.com/api/?name=Joey+Tribbiani&background=3F51B5&color=fff&bold=true" },
+    { id: "fr-p1", nome: "Marcel (macaco)",        cargo: "Melhor Pet", setor: "Friends", foto: "https://ui-avatars.com/api/?name=Marcel&background=9E9E9E&color=fff&bold=true" },
+    { id: "fr-p2", nome: "Chick Jr. (pintinho)",   cargo: "Melhor Pet", setor: "Friends", foto: "https://ui-avatars.com/api/?name=Chick+Jr&background=9E9E9E&color=fff&bold=true" },
+    { id: "fr-p3", nome: "Duck Jr. (pato)",        cargo: "Melhor Pet", setor: "Friends", foto: "https://ui-avatars.com/api/?name=Duck+Jr&background=9E9E9E&color=fff&bold=true" },
 
-    // === DLCC ===
-    { id: "c46", nome: "Pedro Henrique", cargo: "Estagiário", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Pedro+Henrique&background=random&color=fff" },
-    { id: "c47", nome: "Alice Farias", cargo: "Estagiário", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Alice+Farias&background=random&color=fff" },
-    { id: "c48", nome: "Mateus Costa", cargo: "Estagiário", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Mateus+Costa&background=random&color=fff" },
-    { id: "c49", nome: "Gabriela Nunes", cargo: "Terceirizado", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Gabriela+Nunes&background=random&color=fff" },
-    { id: "c50", nome: "Rafael Almeida", cargo: "Terceirizado", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Rafael+Almeida&background=random&color=fff" },
-    { id: "c51", nome: "Mariana Barros", cargo: "Terceirizado", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Mariana+Barros&background=random&color=fff" },
-    { id: "c52", nome: "Rafael Gomes", cargo: "Comissionado", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Rafael+Gomes&background=random&color=fff" },
-    { id: "c53", nome: "Carolina Mendes", cargo: "Comissionado", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Carolina+Mendes&background=random&color=fff" },
-    { id: "c54", nome: "Fernando Souza", cargo: "Comissionado", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Fernando+Souza&background=random&color=fff" },
-    { id: "c55", nome: "Dr. Bruno Castro", cargo: "Conselheiro", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Bruno+Castro&background=random&color=fff" },
-    { id: "c56", nome: "Dra. Letícia Ramos", cargo: "Conselheiro", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Leticia+Ramos&background=random&color=fff" },
-    { id: "c57", nome: "Dr. Tiago Silva", cargo: "Conselheiro", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Tiago+Silva&background=random&color=fff" },
-    { id: "c58", nome: "Amanda Freitas", cargo: "Funcionário", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Amanda+Freitas&background=random&color=fff" },
-    { id: "c59", nome: "Leandro Carvalho", cargo: "Funcionário", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Leandro+Carvalho&background=random&color=fff" },
-    { id: "c60", nome: "Priscila Rocha", cargo: "Funcionário", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Priscila+Rocha&background=random&color=fff" },
+    // ============ BROOKLYN NINE-NINE ============
+    { id: "b99-f1", nome: "Amy Santiago",          cargo: "Personagem Feminino", setor: "Brooklyn Nine-Nine", foto: "https://ui-avatars.com/api/?name=Amy+Santiago&background=E91E63&color=fff&bold=true" },
+    { id: "b99-f2", nome: "Rosa Diaz",             cargo: "Personagem Feminino", setor: "Brooklyn Nine-Nine", foto: "https://ui-avatars.com/api/?name=Rosa+Diaz&background=E91E63&color=fff&bold=true" },
+    { id: "b99-f3", nome: "Gina Linetti",          cargo: "Personagem Feminino", setor: "Brooklyn Nine-Nine", foto: "https://ui-avatars.com/api/?name=Gina+Linetti&background=E91E63&color=fff&bold=true" },
+    { id: "b99-m1", nome: "Jake Peralta",          cargo: "Personagem Masculino", setor: "Brooklyn Nine-Nine", foto: "https://ui-avatars.com/api/?name=Jake+Peralta&background=3F51B5&color=fff&bold=true" },
+    { id: "b99-m2", nome: "Raymond Holt",          cargo: "Personagem Masculino", setor: "Brooklyn Nine-Nine", foto: "https://ui-avatars.com/api/?name=Raymond+Holt&background=3F51B5&color=fff&bold=true" },
+    { id: "b99-m3", nome: "Terry Jeffords",        cargo: "Personagem Masculino", setor: "Brooklyn Nine-Nine", foto: "https://ui-avatars.com/api/?name=Terry+Jeffords&background=3F51B5&color=fff&bold=true" },
+    { id: "b99-p1", nome: "Cheddar (cão)",         cargo: "Melhor Pet", setor: "Brooklyn Nine-Nine", foto: "https://ui-avatars.com/api/?name=Cheddar&background=9E9E9E&color=fff&bold=true" },
+    { id: "b99-p2", nome: "Arlo (cão)",            cargo: "Melhor Pet", setor: "Brooklyn Nine-Nine", foto: "https://ui-avatars.com/api/?name=Arlo&background=9E9E9E&color=fff&bold=true" },
+    { id: "b99-p3", nome: "Kelly (cão)",           cargo: "Melhor Pet", setor: "Brooklyn Nine-Nine", foto: "https://ui-avatars.com/api/?name=Kelly&background=9E9E9E&color=fff&bold=true" },
 
-    // === PROGER ===
-    { id: "c61", nome: "Letícia Carvalho", cargo: "Estagiário", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Leticia+Carvalho&background=random&color=fff" },
-    { id: "c62", nome: "Cauã Silva", cargo: "Estagiário", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Caua+Silva&background=random&color=fff" },
-    { id: "c63", nome: "Isadora Martins", cargo: "Estagiário", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Isadora+Martins&background=random&color=fff" },
-    { id: "c64", nome: "Diego Monteiro", cargo: "Terceirizado", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Diego+Monteiro&background=random&color=fff" },
-    { id: "c65", nome: "Renata Alves", cargo: "Terceirizado", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Renata+Alves&background=random&color=fff" },
-    { id: "c66", nome: "Samuel Costa", cargo: "Terceirizado", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Samuel+Costa&background=random&color=fff" },
-    { id: "c67", nome: "Patrícia Santos", cargo: "Comissionado", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Patricia+Santos&background=random&color=fff" },
-    { id: "c68", nome: "Vinícius Rocha", cargo: "Comissionado", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Vinicius+Rocha&background=random&color=fff" },
-    { id: "c69", nome: "Tatiana Lima", cargo: "Comissionado", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Tatiana+Lima&background=random&color=fff" },
-    { id: "c70", nome: "Dr. Marcelo Ferreira", cargo: "Conselheiro", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Marcelo+Ferreira&background=random&color=fff" },
-    { id: "c71", nome: "Dra. Sandra Gomes", cargo: "Conselheiro", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Sandra+Gomes&background=random&color=fff" },
-    { id: "c72", nome: "Dr. Roberto Nunes", cargo: "Conselheiro", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Roberto+Nunes&background=random&color=fff" },
-    { id: "c73", nome: "Luciana Dias", cargo: "Funcionário", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Luciana+Dias&background=random&color=fff" },
-    { id: "c74", nome: "Márcio Silva", cargo: "Funcionário", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Marcio+Silva&background=random&color=fff" },
-    { id: "c75", nome: "Eliane Costa", cargo: "Funcionário", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Eliane+Costa&background=random&color=fff" }
+    // ============ STRANGER THINGS ============
+    { id: "st-f1", nome: "Eleven",                 cargo: "Personagem Feminino", setor: "Stranger Things", foto: "https://ui-avatars.com/api/?name=Eleven&background=E91E63&color=fff&bold=true" },
+    { id: "st-f2", nome: "Max Mayfield",           cargo: "Personagem Feminino", setor: "Stranger Things", foto: "https://ui-avatars.com/api/?name=Max+Mayfield&background=E91E63&color=fff&bold=true" },
+    { id: "st-f3", nome: "Nancy Wheeler",          cargo: "Personagem Feminino", setor: "Stranger Things", foto: "https://ui-avatars.com/api/?name=Nancy+Wheeler&background=E91E63&color=fff&bold=true" },
+    { id: "st-m1", nome: "Mike Wheeler",           cargo: "Personagem Masculino", setor: "Stranger Things", foto: "https://ui-avatars.com/api/?name=Mike+Wheeler&background=3F51B5&color=fff&bold=true" },
+    { id: "st-m2", nome: "Dustin Henderson",       cargo: "Personagem Masculino", setor: "Stranger Things", foto: "https://ui-avatars.com/api/?name=Dustin+Henderson&background=3F51B5&color=fff&bold=true" },
+    { id: "st-m3", nome: "Steve Harrington",       cargo: "Personagem Masculino", setor: "Stranger Things", foto: "https://ui-avatars.com/api/?name=Steve+Harrington&background=3F51B5&color=fff&bold=true" },
+    { id: "st-p1", nome: "Mews (gato)",            cargo: "Melhor Pet", setor: "Stranger Things", foto: "https://ui-avatars.com/api/?name=Mews&background=9E9E9E&color=fff&bold=true" },
+    { id: "st-p2", nome: "Dart (Demodog)",         cargo: "Melhor Pet", setor: "Stranger Things", foto: "https://ui-avatars.com/api/?name=Dart&background=9E9E9E&color=fff&bold=true" },
+    { id: "st-p3", nome: "Tews (gato)",            cargo: "Melhor Pet", setor: "Stranger Things", foto: "https://ui-avatars.com/api/?name=Tews&background=9E9E9E&color=fff&bold=true" }
 ];
 
 let eleitorAtual = { nome: '', email: '' };
-const ordemCargos = ["Estagiário", "Terceirizado", "Comissionado", "Conselheiro", "Funcionário"];
+const ordemCargos = ["Personagem Feminino", "Personagem Masculino", "Melhor Pet"];
 let etapaAtual = 0;
 
 // Função auxiliar para procurar a foto do candidato pelo nome
@@ -105,8 +81,8 @@ document.getElementById('form-login').addEventListener('submit', async function(
     const nomeDigitado = document.getElementById('nome-login').value.trim();
     const emailDigitado = document.getElementById('email-login').value.trim().toLowerCase();
 
-    if (!emailDigitado.endsWith('@coren-pe.gov.br')) {
-        alert("Por favor, utilize o seu e-mail institucional (@coren-pe.gov.br).");
+    if (!emailDigitado.includes('@')) {
+        alert("Por favor, insira um e-mail válido.");
         return;
     }
 
@@ -124,14 +100,11 @@ document.getElementById('form-login').addEventListener('submit', async function(
         const dados = await resposta.json();
 
         if (dados && dados.length > 0) {
-            // JÁ VOTOU - Mostrar ecrã de recibo apenas como leitura
             mostrarEcraRecibo(dados[0]);
         } else {
-            // NÃO VOTOU - Iniciar votação
             eleitorAtual.nome = nomeDigitado;
             eleitorAtual.email = emailDigitado;
             
-            // Atualiza os nomes exibidos na tela
             document.querySelectorAll('.nome-exibicao').forEach(el => el.innerText = nomeDigitado);
             
             document.getElementById('login-section').style.display = 'none';
@@ -160,7 +133,7 @@ function renderizarCandidatos() {
         html += `<div class="etapa-votacao" id="etapa-${index}" style="display: ${index === 0 ? 'block' : 'none'};">`;
         html += `
             <div class="cargo-header">
-                <h2>${cargo} Destaque </h2>
+                <h2>${cargo} Destaque</h2>
                 <p>Selecione <strong>apenas 1 candidato</strong> desta categoria.</p>
             </div>
         `;
@@ -227,7 +200,7 @@ document.getElementById('btn-anterior').addEventListener('click', () => {
     window.scrollTo(0, 0);
 });
 
-// BOTÃO "REVISAR VOTOS" (Abre a tela de resumo antes de confirmar)
+// BOTÃO "REVISAR VOTOS"
 document.getElementById('btn-revisar').addEventListener('click', () => {
     const cargoAtual = ordemCargos[etapaAtual];
     const nameAttr = cargoAtual.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
@@ -235,18 +208,14 @@ document.getElementById('btn-revisar').addEventListener('click', () => {
         alert("Selecione a sua última opção antes de revisar os votos."); return;
     }
     
-    // Coleta as escolhas atuais
     const votos = {
-        estagiario: document.querySelector('input[name="estagiario"]:checked').value,
-        terceirizado: document.querySelector('input[name="terceirizado"]:checked').value,
-        comissionado: document.querySelector('input[name="comissionado"]:checked').value,
-        conselheiro: document.querySelector('input[name="conselheiro"]:checked').value,
-        funcionario: document.querySelector('input[name="funcionario"]:checked').value
+        personagem_feminino:  document.querySelector('input[name="personagem_feminino"]:checked').value,
+        personagem_masculino: document.querySelector('input[name="personagem_masculino"]:checked').value,
+        melhor_pet:           document.querySelector('input[name="melhor_pet"]:checked').value
     };
 
     preencherListaResumo(votos);
     
-    // Ocultar form, mostrar resumo interativo
     document.getElementById('votacao-section').style.display = 'none';
     document.getElementById('resumo-section').style.display = 'block';
     window.scrollTo(0, 0);
@@ -258,14 +227,12 @@ document.getElementById('btn-voltar-edicao').addEventListener('click', () => {
     document.getElementById('votacao-section').style.display = 'block';
 });
 
-// ENVIO FINAL DEFINITIVO
+// ENVIO FINAL
 document.getElementById('btn-confirmar-final').addEventListener('click', async function() {
     const votosParaEnvio = {
-        estagiario: document.querySelector('input[name="estagiario"]:checked').value,
-        terceirizado: document.querySelector('input[name="terceirizado"]:checked').value,
-        comissionado: document.querySelector('input[name="comissionado"]:checked').value,
-        conselheiro: document.querySelector('input[name="conselheiro"]:checked').value,
-        funcionario: document.querySelector('input[name="funcionario"]:checked').value
+        personagem_feminino:  document.querySelector('input[name="personagem_feminino"]:checked').value,
+        personagem_masculino: document.querySelector('input[name="personagem_masculino"]:checked').value,
+        melhor_pet:           document.querySelector('input[name="melhor_pet"]:checked').value
     };
 
     this.innerText = "Enviando...";
@@ -284,7 +251,6 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
         });
 
         if (resposta.ok) {
-            // Sucesso! Mostrar mensagem e bloquear alterações
             this.style.display = 'none';
             document.getElementById('header-resumo').innerHTML = `<h2>Comprovante de Votação</h2><p>Votos enviados por <strong>${eleitorAtual.email}</strong>.</p>`;
             document.getElementById('mensagem-sucesso').style.display = 'block';
@@ -302,10 +268,10 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
     }
 });
 
-// FUNÇÃO PARA PREENCHER O HTML DO RESUMO (Usado tanto para revisar quanto para ver votos antigos)
+// PREENCHER RESUMO
 function preencherListaResumo(votosDB) {
     const lista = document.getElementById('lista-resumo');
-    lista.innerHTML = ''; // limpa
+    lista.innerHTML = '';
 
     ordemCargos.forEach(cargo => {
         const key = cargo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
@@ -322,18 +288,16 @@ function preencherListaResumo(votosDB) {
     });
 }
 
-// MOSTRAR TELA DE RECIBO PARA QUEM JÁ VOTOU (Modo Leitura)
+// MOSTRAR TELA DE RECIBO PARA QUEM JÁ VOTOU
 function mostrarEcraRecibo(dadosDB) {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('resumo-section').style.display = 'block';
     
-    // Altera Textos
     document.getElementById('header-resumo').innerHTML = `
         <h2 style="color: #1a7f37;">Voto Já Registrado!</h2>
         <p>Identificamos que <strong>${dadosDB.nome_completo}</strong> (${dadosDB.email}) já participou da votação. Abaixo estão as suas escolhas:</p>
     `;
     
-    // Esconde botões de edição/envio
     document.getElementById('botoes-resumo').style.display = 'none';
     document.getElementById('mensagem-sucesso').style.display = 'none';
 

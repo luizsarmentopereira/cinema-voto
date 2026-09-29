@@ -1,5 +1,5 @@
-const supabaseUrl = 'https://cnptvjdzqfsqbdkrnbbe.supabase.co';
-const supabaseKey = 'sb_publishable_cCqmjnqgdSvOcKA6oyd28Q_4BpE1hQ6';
+const supabaseUrl = 'https://ypyhbuoglipxsyazsxoj.supabase.co';
+const supabaseKey = 'sb_publishable_ufcIVBj-f_fHQqnecaxEfw_50Cslvyx';
 
 // LOGIN DO ADMINISTRADOR
 document.getElementById('form-admin-login').addEventListener('submit', async function(e) {

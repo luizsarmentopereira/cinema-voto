@@ -11,6 +11,9 @@ const ordemCargos = ["Personagem Feminino", "Personagem Masculino", "Melhor Pet"
 let etapaAtual = 0;
 let carregando = true;
 
+// Guarda a última escolha confirmada por categoria (evita troca acidental)
+const selecoesConfirmadas = {};
+
 // ============================================================
 // ÍCONES SVG (para uso no modal)
 // ============================================================
@@ -69,7 +72,7 @@ function abrirModal({ tipo = 'aviso', titulo, mensagem, botoes }) {
         // Exibe
         modalEl.style.display = 'flex';
 
-        // Permite fechar com ESC (resolve como false/null)
+        // Permite fechar com ESC (resolve como null)
         const escHandler = (e) => {
             if (e.key === 'Escape') {
                 fecharModal(null);
@@ -253,38 +256,39 @@ function renderizarCandidatos() {
 }
 
 // ============================================================
-// 🚫 BLOQUEIO: não permitir trocar de candidato sem confirmação
+// 🚫 BLOQUEIO: confirmação antes de trocar de candidato
+// Usa evento 'change' (mais confiável que 'click' em radios escondidos)
+// e reverte a seleção se o usuário recusar.
 // ============================================================
 function aplicarBloqueioTrocaSelecao() {
     document.querySelectorAll('#secoes-votacao input[type="radio"]').forEach(radio => {
-        radio.addEventListener('click', async function(e) {
+        radio.addEventListener('change', async function() {
             const nomeGrupo = this.name;
+            const valorNovo = this.value;
+            const valorAnterior = selecoesConfirmadas[nomeGrupo];
 
-            // Qual está selecionado atualmente nesse grupo?
-            const atualSelecionado = document.querySelector(`input[name="${nomeGrupo}"]:checked`);
+            // Primeira escolha nesta categoria (ou mesma escolha) → só registra
+            if (!valorAnterior || valorAnterior === valorNovo) {
+                selecoesConfirmadas[nomeGrupo] = valorNovo;
+                return;
+            }
 
-            // Se não havia nenhum, ou é o mesmo que já estava → deixa passar
-            if (!atualSelecionado || atualSelecionado === this) return;
-
-            // Bloqueia a mudança automática
-            e.preventDefault();
-
-            const nomeAnterior = atualSelecionado.value;
-            const nomeNovo = this.value;
-
+            // Já havia escolha diferente → pede confirmação
             const confirmou = await modalConfirmacao(
                 'Trocar de candidato?',
-                `Você já escolheu <strong>${nomeAnterior}</strong> nesta categoria.<br><br>Deseja trocar por <strong>${nomeNovo}</strong>?`,
+                `Você já escolheu <strong>${valorAnterior}</strong> nesta categoria.<br><br>Deseja trocar por <strong>${valorNovo}</strong>?`,
                 'Sim, trocar',
                 'Não, manter'
             );
 
             if (confirmou) {
-                // Aplica a troca manualmente
-                atualSelecionado.checked = false;
-                this.checked = true;
+                selecoesConfirmadas[nomeGrupo] = valorNovo;
+            } else {
+                // Reverte: marca o radio anterior de volta
+                const radioAnterior = [...document.querySelectorAll(`input[name="${nomeGrupo}"]`)]
+                    .find(el => el.value === valorAnterior);
+                if (radioAnterior) radioAnterior.checked = true;
             }
-            // Se não confirmou → nada acontece, o antigo permanece
         });
     });
 }

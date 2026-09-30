@@ -20,7 +20,7 @@
         .btn-modal { margin-top: 10px; }
 
         .tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; flex-wrap: wrap; justify-content: center; }
-        .tab-btn { background: transparent; color: var(--text-muted); border: none; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; padding: 10px 20px; cursor: pointer; border-radius: var(--radius-md); box-shadow: none; margin: 0; width: auto; transition: var(--transition); }
+        .tab-btn { background: transparent; color: var(--text-muted); border: none; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; padding: 10px 20px; cursor: pointer; border-radius: var(--radius-md); box-shadow: none; margin: 0; width: auto; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; }
         .tab-btn:hover { background: var(--primary-light); color: var(--primary-color); transform: none; box-shadow: none; }
         .tab-btn.active { background: var(--primary-color); color: white; box-shadow: var(--shadow-sm); }
         .tab-content { display: none; animation: fadeIn 0.4s ease; }
@@ -33,7 +33,7 @@
         
         .insight-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .insight-card { background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); color: white; padding: 20px; border-radius: var(--radius-md); text-align: center; box-shadow: var(--shadow-md); }
-        .insight-card h4 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; margin-bottom: 10px; opacity: 0.9; }
+        .insight-card h4 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; margin-bottom: 10px; opacity: 0.9; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .insight-card .valor { font-size: 24px; font-weight: 700; }
         .insight-card.bad { background: linear-gradient(135deg, #6D6483, #17122B); }
 
@@ -47,14 +47,27 @@
         .btn-excluir {
             background-color: #e53e3e; color: white; border: none; padding: 6px 12px; font-size: 13px; font-weight: 600;
             border-radius: var(--radius-md); cursor: pointer; box-shadow: none; margin: 0; width: auto; transition: var(--transition);
+            display: inline-flex; align-items: center; gap: 6px;
         }
         .btn-excluir:hover { background-color: #c53030; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(229, 62, 62, 0.3); }
+
+        /* Ícone SVG padrão em linha */
+        .inline-icon { width: 1.15em; height: 1.15em; flex-shrink: 0; vertical-align: middle; }
     </style>
 </head>
 <body>
 
 <div class="container dashboard-container">
-    <h1>Painel de Apuração 🏆</h1>
+    <h1>
+        <!-- 🎬 Claquete SVG -->
+        <svg class="icon-title" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/>
+            <path d="m6.2 5.3 3.1 3.9"/>
+            <path d="m12.4 3.4 3.1 4"/>
+            <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
+        </svg>
+        Painel de Apuração
+    </h1>
     
     <!-- Login Admin -->
     <div id="admin-login-section">
@@ -67,7 +80,15 @@
             <label for="admin-senha">Senha do Painel</label>
             <input type="password" id="admin-senha" required placeholder="Digite a senha de acesso ao painel" style="width: 100%; padding: 14px 16px; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; background-color: #FBFAFE; margin-top: 8px;">
 
-            <button type="submit" id="btn-admin-login">Acessar Apuração</button>
+            <button type="submit" id="btn-admin-login">
+                <!-- 🔑 Ícone SVG: Chave -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="7.5" cy="15.5" r="5.5"/>
+                    <path d="m21 2-9.6 9.6"/>
+                    <path d="m15.5 7.5 3 3L22 7l-3-3"/>
+                </svg>
+                Acessar Apuração
+            </button>
         </form>
     </div>
 
@@ -75,11 +96,24 @@
     <div id="admin-dashboard-section" style="display: none;">
         
         <div class="header-admin">
-            <div>
-                <span style="color: var(--text-muted); font-size: 15px;">👤 Logado como: <strong id="nome-admin-logado" style="color: var(--primary-color);"></strong></span>
+            <div style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 15px;">
+                <!-- 👤 Ícone SVG: Usuário -->
+                <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Logado como: <strong id="nome-admin-logado" style="color: var(--primary-color);"></strong>
             </div>
             <div>
-                <button type="button" class="btn-secundario" style="padding: 10px 20px; margin-top: 0; border-radius: var(--radius-pill); font-size: 14px; width: auto;" onclick="abrirModalSenha(false)">🔑 Alterar Minha Senha</button>
+                <button type="button" class="btn-secundario" style="padding: 10px 20px; margin-top: 0; border-radius: var(--radius-pill); font-size: 14px; width: auto;" onclick="abrirModalSenha(false)">
+                    <!-- 🔑 Ícone SVG: Chave -->
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="7.5" cy="15.5" r="5.5"/>
+                        <path d="m21 2-9.6 9.6"/>
+                        <path d="m15.5 7.5 3 3L22 7l-3-3"/>
+                    </svg>
+                    Alterar Minha Senha
+                </button>
             </div>
         </div>
 
@@ -89,10 +123,44 @@
 
         <!-- Abas -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="abrirAba('aba-candidatos', this)">Candidatos Mais Votados</button>
-            <button class="tab-btn" onclick="abrirAba('aba-setores', this)">Métricas por Série</button>
-            <button class="tab-btn" onclick="abrirAba('aba-eleitores', this)">Registo de Eleitores</button>
-            <button class="tab-btn" onclick="abrirAba('aba-logs', this)">📋 Logs de Auditoria</button>
+            <button class="tab-btn active" onclick="abrirAba('aba-candidatos', this)">
+                <!-- 🎬 Claquete SVG -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/>
+                    <path d="m6.2 5.3 3.1 3.9"/>
+                    <path d="m12.4 3.4 3.1 4"/>
+                    <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
+                </svg>
+                Candidatos Mais Votados
+            </button>
+            <button class="tab-btn" onclick="abrirAba('aba-setores', this)">
+                <!-- 📊 Ícone SVG: Gráfico -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="18" y1="20" x2="18" y2="10"/>
+                    <line x1="12" y1="20" x2="12" y2="4"/>
+                    <line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+                Métricas por Série
+            </button>
+            <button class="tab-btn" onclick="abrirAba('aba-eleitores', this)">
+                <!-- 👥 Ícone SVG: Pessoas -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Registo de Eleitores
+            </button>
+            <button class="tab-btn" onclick="abrirAba('aba-logs', this)">
+                <!-- 📋 Ícone SVG: Prancheta -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="8" y="2" width="8" height="4" rx="1"/>
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                    <path d="M9 12h6M9 16h4"/>
+                </svg>
+                Logs de Auditoria
+            </button>
         </div>
 
         <!-- ABA 1 -->
@@ -104,11 +172,24 @@
         <div id="aba-setores" class="tab-content">
             <div class="insight-cards">
                 <div class="insight-card">
-                    <h4>🌟 Série Mais Votada (Geral)</h4>
+                    <h4>
+                        <!-- ⭐ Ícone SVG: Estrela cheia -->
+                        <svg class="inline-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 2l2.9 6.9 7.4.6-5.6 4.9 1.7 7.2L12 17.8 5.6 21.6l1.7-7.2-5.6-4.9 7.4-.6z"/>
+                        </svg>
+                        Série Mais Votada (Geral)
+                    </h4>
                     <div class="valor" id="insight-setor-mais">N/A</div>
                 </div>
                 <div class="insight-card bad">
-                    <h4>📉 Série Menos Votada (Geral)</h4>
+                    <h4>
+                        <!-- 📉 Ícone SVG: Tendência para baixo -->
+                        <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/>
+                            <polyline points="16 17 22 17 22 11"/>
+                        </svg>
+                        Série Menos Votada (Geral)
+                    </h4>
                     <div class="valor" id="insight-setor-menos">N/A</div>
                 </div>
             </div>
@@ -161,7 +242,16 @@
         </div>
 
         <div style="text-align: center; margin-top: 40px; border-top: 1px solid var(--border-color); padding-top: 20px;">
-            <button type="button" id="btn-atualizar" class="btn-secundario" style="width: auto; padding: 12px 24px;">🔄 Atualizar Resultados em Tempo Real</button>
+            <button type="button" id="btn-atualizar" class="btn-secundario" style="width: auto; padding: 12px 24px;">
+                <!-- 🔄 Ícone SVG: Atualizar -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                    <path d="M21 3v5h-5"/>
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                    <path d="M3 21v-5h5"/>
+                </svg>
+                Atualizar Resultados em Tempo Real
+            </button>
         </div>
     </div>
 </div>
@@ -176,77 +266,68 @@
             <input type="password" id="confirma-nova-senha" required placeholder="Confirme a nova senha" class="input-modal">
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button type="button" id="btn-fechar-modal" class="btn-secundario btn-modal" style="display:none; width: 40%;">Cancelar</button>
-                <button type="submit" id="btn-salvar-senha" class="btn-modal" style="width: 100%;">Salvar Nova Senha</button>
+                <button type="submit" id="btn-salvar-senha" class="btn-modal" style="width: 100%;">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    Salvar Nova Senha
+                </button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    // ⚠️ SUBSTITUA PELAS SUAS NOVAS CREDENCIAIS DO SUPABASE
+    // ⚠️ Credenciais do Supabase
     const supabaseUrl = 'https://ypyhbuoglipxsyazsxoj.supabase.co';
     const supabaseKey = 'sb_publishable_ufcIVBj-f_fHQqnecaxEfw_50Cslvyx';
     let graficosAtivos = {};
     let adminLogado = null;
     let trocaObrigatoria = false;
 
-    const candidatosData = [
-        // Game of Thrones
-        { nome: "Daenerys Targaryen", setor: "Game of Thrones" },
-        { nome: "Arya Stark", setor: "Game of Thrones" },
-        { nome: "Cersei Lannister", setor: "Game of Thrones" },
-        { nome: "Jon Snow", setor: "Game of Thrones" },
-        { nome: "Tyrion Lannister", setor: "Game of Thrones" },
-        { nome: "Jaime Lannister", setor: "Game of Thrones" },
-        { nome: "Fantasma (Ghost)", setor: "Game of Thrones" },
-        { nome: "Drogon", setor: "Game of Thrones" },
-        { nome: "Nymeria", setor: "Game of Thrones" },
-        // The Office
-        { nome: "Pam Beesly", setor: "The Office" },
-        { nome: "Angela Martin", setor: "The Office" },
-        { nome: "Kelly Kapoor", setor: "The Office" },
-        { nome: "Michael Scott", setor: "The Office" },
-        { nome: "Jim Halpert", setor: "The Office" },
-        { nome: "Dwight Schrute", setor: "The Office" },
-        { nome: "Bandit (gato)", setor: "The Office" },
-        { nome: "Princess Lady (gato)", setor: "The Office" },
-        { nome: "Garbage (gato)", setor: "The Office" },
-        // Friends
-        { nome: "Rachel Green", setor: "Friends" },
-        { nome: "Monica Geller", setor: "Friends" },
-        { nome: "Phoebe Buffay", setor: "Friends" },
-        { nome: "Ross Geller", setor: "Friends" },
-        { nome: "Chandler Bing", setor: "Friends" },
-        { nome: "Joey Tribbiani", setor: "Friends" },
-        { nome: "Marcel (macaco)", setor: "Friends" },
-        { nome: "Chick Jr. (pintinho)", setor: "Friends" },
-        { nome: "Duck Jr. (pato)", setor: "Friends" },
-        // Brooklyn Nine-Nine
-        { nome: "Amy Santiago", setor: "Brooklyn Nine-Nine" },
-        { nome: "Rosa Diaz", setor: "Brooklyn Nine-Nine" },
-        { nome: "Gina Linetti", setor: "Brooklyn Nine-Nine" },
-        { nome: "Jake Peralta", setor: "Brooklyn Nine-Nine" },
-        { nome: "Raymond Holt", setor: "Brooklyn Nine-Nine" },
-        { nome: "Terry Jeffords", setor: "Brooklyn Nine-Nine" },
-        { nome: "Cheddar (cão)", setor: "Brooklyn Nine-Nine" },
-        { nome: "Arlo (cão)", setor: "Brooklyn Nine-Nine" },
-        { nome: "Kelly (cão)", setor: "Brooklyn Nine-Nine" },
-        // Stranger Things
-        { nome: "Eleven", setor: "Stranger Things" },
-        { nome: "Max Mayfield", setor: "Stranger Things" },
-        { nome: "Nancy Wheeler", setor: "Stranger Things" },
-        { nome: "Mike Wheeler", setor: "Stranger Things" },
-        { nome: "Dustin Henderson", setor: "Stranger Things" },
-        { nome: "Steve Harrington", setor: "Stranger Things" },
-        { nome: "Mews (gato)", setor: "Stranger Things" },
-        { nome: "Dart (Demodog)", setor: "Stranger Things" },
-        { nome: "Tews (gato)", setor: "Stranger Things" }
-    ];
+    // ============================================================
+    // ESTADO GLOBAL — preenchido do banco
+    // ============================================================
+    let candidatosData = [];
+    let mapaSetores = {};
+    let SERIES_LISTA = [];
 
-    const SERIES_LISTA = ["Game of Thrones", "The Office", "Friends", "Brooklyn Nine-Nine", "Stranger Things"];
+    // Ícones SVG para uso interno em strings JS
+    const ICON = {
+        trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;vertical-align:-0.2em;flex-shrink:0;"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>',
+        trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:-0.15em;"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>'
+    };
 
-    const mapaSetores = {};
-    candidatosData.forEach(c => mapaSetores[c.nome] = c.setor);
+    // ============================================================
+    // BUSCA CANDIDATOS DO BANCO
+    // ============================================================
+    async function carregarCandidatosDoBanco() {
+        const url = `${supabaseUrl}/rest/v1/candidatos?select=*&ativo=eq.true&order=serie.asc,nome.asc`;
+        const resposta = await fetch(url, {
+            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+        });
+        if (!resposta.ok) throw new Error("Falha ao buscar candidatos");
+        candidatosData = await resposta.json();
+
+        // Reconstrói o mapa de setores e a lista de séries
+        mapaSetores = {};
+        candidatosData.forEach(c => mapaSetores[c.nome] = c.serie);
+        SERIES_LISTA = [...new Set(candidatosData.map(c => c.serie))].sort();
+    }
+
+    // ============================================================
+    // INICIALIZAÇÃO
+    // ============================================================
+    (async function init() {
+        try {
+            await carregarCandidatosDoBanco();
+        } catch (erro) {
+            console.error('Erro ao carregar candidatos:', erro);
+            alert("Erro ao carregar candidatos do banco. Verifique a conexão e recarregue a página.");
+        }
+    })();
 
     function abrirAba(idAba, elBotao) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -255,11 +336,15 @@
         if (elBotao) elBotao.classList.add('active');
     }
 
+    // ============================================================
+    // LOGIN DO ADMINISTRADOR
+    // ============================================================
     document.getElementById('form-admin-login').addEventListener('submit', async function(e) {
         e.preventDefault();
         const email = document.getElementById('admin-email').value.trim().toLowerCase();
         const senha = document.getElementById('admin-senha').value;
         const btnLogin = document.getElementById('btn-admin-login');
+        const htmlOriginal = btnLogin.innerHTML;
         btnLogin.innerText = "Autenticando...";
         btnLogin.disabled = true;
 
@@ -278,12 +363,13 @@
                 }
             } else {
                 alert("Acesso negado. Credenciais incorretas.");
-                btnLogin.innerText = "Acessar Apuração";
+                btnLogin.innerHTML = htmlOriginal;
                 btnLogin.disabled = false;
             }
         } catch (erro) {
-            alert("Erro ao conectar ao servidor.");
-            btnLogin.innerText = "Acessar Apuração";
+            console.error('Erro completo:', erro);
+            alert("Erro ao conectar ao servidor.\n\nDetalhes: " + erro.message);
+            btnLogin.innerHTML = htmlOriginal;
             btnLogin.disabled = false;
         }
     });
@@ -345,8 +431,12 @@
         finally { btnSalvar.innerText = "Salvar Nova Senha"; btnSalvar.disabled = false; }
     });
 
+    // ============================================================
+    // CARREGAR APURAÇÃO
+    // ============================================================
     async function carregarApuracao() {
         const btnAtualizar = document.getElementById('btn-atualizar');
+        const htmlOriginal = btnAtualizar.innerHTML;
         btnAtualizar.innerText = "A atualizar...";
         try {
             const [respVotos, respLogs] = await Promise.all([
@@ -363,7 +453,7 @@
             renderizarTabelaEleitores(votos);
             renderizarTabelaLogs(logs);
         } catch (erro) { alert("Erro ao buscar dados do servidor."); } 
-        finally { btnAtualizar.innerText = "🔄 Atualizar Resultados em Tempo Real"; }
+        finally { btnAtualizar.innerHTML = htmlOriginal; }
     }
 
     async function excluirVoto(idVoto, emailEleitor) {
@@ -398,6 +488,9 @@
         }
     }
 
+    // ============================================================
+    // RENDERIZAÇÕES
+    // ============================================================
     function renderizarListasCandidatos(votos) {
         const container = document.getElementById('container-ranking-candidatos');
         container.innerHTML = ''; 
@@ -418,7 +511,8 @@
                 ranking.forEach((cand, i) => {
                     const isPrimeiro = i === 0;
                     const estiloLinha = isPrimeiro ? 'font-weight: bold; font-size: 16px; color: var(--text-dark); background: var(--gold-light); padding: 8px; border-radius: 4px;' : 'font-size: 14px; color: var(--text-muted); padding: 4px 8px; border-bottom: 1px solid #eee;';
-                    html += `<li style="display: flex; justify-content: space-between; margin-bottom: 5px; ${estiloLinha}"><span>${isPrimeiro?'🏆 ':i+1+'º - '}${cand.nome}</span><span>${cand.total} voto(s)</span></li>`;
+                    const prefixo = isPrimeiro ? `${ICON.trophy} ` : `${i + 1}º - `;
+                    html += `<li style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 5px; ${estiloLinha}"><span style="display:flex; align-items:center; gap:6px;">${prefixo}${cand.nome}</span><span>${cand.total} voto(s)</span></li>`;
                 });
                 html += `</ul>`;
             }
@@ -496,7 +590,7 @@
                     <td>${voto.email}</td>
                     <td>${dataForm}</td>
                     <td style="text-align: center;">
-                        <button class="btn-excluir" onclick="excluirVoto(${voto.id}, '${voto.email}')">🗑️ Anular</button>
+                        <button class="btn-excluir" onclick="excluirVoto(${voto.id}, '${voto.email}')">${ICON.trash} Anular</button>
                     </td>
                 </tr>`;
         });

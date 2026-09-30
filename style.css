@@ -52,7 +52,6 @@ body {
     overflow: visible;
 }
 
-/* Faixa superior tipo "fita de filme" colorida */
 .container::before {
     content: '';
     position: absolute;
@@ -66,7 +65,7 @@ body {
         var(--mint-color) 60px 80px);
 }
 
-/* 🎞️ Medalha dourada com ROLO DE FILME dentro (ícone SVG) */
+/* 🎞️ Medalha dourada com ROLO DE FILME dentro */
 .container::after {
     content: '';
     position: absolute;
@@ -98,7 +97,6 @@ body {
     100% { transform: translateX(-50%) scale(1) rotate(-8deg); opacity: 1; }
 }
 
-/* Títulos */
 h1 {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 28px;
@@ -114,7 +112,6 @@ h1 {
     flex-wrap: wrap;
 }
 
-/* 🎬 Ícone SVG (claquete) que acompanha o título principal */
 h1 .icon-title {
     width: 34px;
     height: 34px;
@@ -209,7 +206,6 @@ button:hover {
 button:active { transform: translateY(0); }
 button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: none; box-shadow: none; }
 
-/* 🎬 Ícones SVG internos de botões */
 .btn-icon {
     width: 1.15em;
     height: 1.15em;
@@ -266,7 +262,6 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     line-height: 1.4;
 }
 
-/* ⭐ Selo de vencedor com ESTRELA SVG dentro do círculo dourado */
 .card-candidato::after {
     content: '';
     position: absolute;
@@ -468,9 +463,170 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     font-size: 15px;
 }
 
+/* ============================================================
+   MODAL CUSTOMIZADO (aviso e confirmação)
+   ============================================================ */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(23, 18, 43, 0.65);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 20px;
+    animation: modalFadeIn 0.25s ease;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.modal-box {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: 32px 28px 26px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: var(--shadow-md), 0 20px 60px rgba(23,18,43,0.25);
+    text-align: center;
+    position: relative;
+    animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid var(--border-color);
+}
+
+@keyframes modalPop {
+    from { transform: scale(0.85) translateY(20px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.modal-icon-wrapper {
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.modal-icon-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    opacity: 0.15;
+}
+
+.modal-icon-wrapper.tipo-aviso {
+    background: linear-gradient(135deg, #FFB84D 0%, var(--gold-color) 100%);
+    box-shadow: 0 8px 20px rgba(245,166,35,0.35);
+}
+.modal-icon-wrapper.tipo-aviso::before { background: var(--gold-color); }
+
+.modal-icon-wrapper.tipo-confirmacao {
+    background: linear-gradient(135deg, #8B6FF0 0%, var(--primary-color) 100%);
+    box-shadow: 0 8px 20px rgba(109,76,224,0.35);
+}
+
+.modal-icon-wrapper.tipo-erro {
+    background: linear-gradient(135deg, #FF7B5C 0%, #E53E3E 100%);
+    box-shadow: 0 8px 20px rgba(229,62,62,0.35);
+}
+
+.modal-icon-wrapper svg {
+    width: 34px;
+    height: 34px;
+    color: #fff;
+    z-index: 1;
+    position: relative;
+}
+
+.modal-box h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 21px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0 0 10px;
+    padding: 0;
+}
+
+.modal-box p {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0 0 24px;
+}
+
+.modal-box p strong {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.modal-botoes {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+.modal-botoes button {
+    margin-top: 0;
+    padding: 13px 20px;
+    font-size: 15px;
+    flex: 1;
+    min-width: 0;
+    box-shadow: none;
+}
+
+.modal-botoes button.btn-primary {
+    background-color: var(--primary-color);
+    box-shadow: 0 6px 14px rgba(109,76,224,0.28);
+}
+
+.modal-botoes button.btn-primary:hover {
+    background-color: var(--primary-hover);
+    box-shadow: 0 10px 20px rgba(109,76,224,0.35);
+}
+
+.modal-botoes button.btn-cancelar {
+    background-color: transparent;
+    border: 2px solid var(--border-color);
+    color: var(--text-muted);
+}
+
+.modal-botoes button.btn-cancelar:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.modal-botoes button.btn-perigo {
+    background-color: #e53e3e;
+    box-shadow: 0 6px 14px rgba(229,62,62,0.28);
+}
+
+.modal-botoes button.btn-perigo:hover {
+    background-color: #c53030;
+}
+
+/* Ajuste para mobile */
+@media (max-width: 480px) {
+    .modal-box { padding: 26px 20px 22px; }
+    .modal-box h3 { font-size: 19px; }
+    .modal-box p { font-size: 14px; }
+    .modal-botoes { flex-direction: column-reverse; }
+}
+
+/* Acessibilidade */
 @media (prefers-reduced-motion: reduce) {
-    .container::after { animation: none; }
-    .etapa-votacao { animation: none; }
+    .container::after,
+    .etapa-votacao,
+    .modal-box { animation: none; }
     .card-candidato::after { transition: none; }
 }
 

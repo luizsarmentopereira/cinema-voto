@@ -3,13 +3,112 @@ const supabaseUrl = 'https://ypyhbuoglipxsyazsxoj.supabase.co';
 const supabaseKey = 'sb_publishable_ufcIVBj-f_fHQqnecaxEfw_50Cslvyx';
 
 // ============================================================
-// ESTADO GLOBAL — Preenchido dinamicamente do banco
+// ESTADO GLOBAL
 // ============================================================
 let candidatosData = [];
 let eleitorAtual = { nome: '', email: '' };
 const ordemCargos = ["Personagem Feminino", "Personagem Masculino", "Melhor Pet"];
 let etapaAtual = 0;
 let carregando = true;
+
+// ============================================================
+// ÍCONES SVG (para uso no modal)
+// ============================================================
+const ICONES_MODAL = {
+    aviso: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    confirmacao: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    erro: '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'
+};
+
+// ============================================================
+// 🎬 MODAL CUSTOMIZADO
+// ============================================================
+const modalEl = document.getElementById('modal-custom');
+const modalIconWrapper = document.getElementById('modal-icon-wrapper');
+const modalIcon = document.getElementById('modal-icon');
+const modalTitulo = document.getElementById('modal-titulo');
+const modalMensagem = document.getElementById('modal-mensagem');
+const modalBotoes = document.getElementById('modal-botoes');
+
+let modalResolver = null;
+
+/**
+ * Abre o modal e retorna uma Promise.
+ * @param {Object} opts
+ * @param {string} opts.tipo     'aviso' | 'confirmacao' | 'erro'
+ * @param {string} opts.titulo
+ * @param {string} opts.mensagem  (aceita HTML simples como <strong>)
+ * @param {Array}  opts.botoes    [{ texto, valor, estilo }]
+ *        estilo: 'primary' | 'cancelar' | 'perigo'
+ */
+function abrirModal({ tipo = 'aviso', titulo, mensagem, botoes }) {
+    return new Promise(resolve => {
+        modalResolver = resolve;
+
+        // Aplica ícone e cor
+        modalIconWrapper.className = 'modal-icon-wrapper tipo-' + tipo;
+        modalIcon.innerHTML = ICONES_MODAL[tipo] || ICONES_MODAL.aviso;
+
+        // Textos
+        modalTitulo.innerText = titulo;
+        modalMensagem.innerHTML = mensagem;
+
+        // Botões
+        modalBotoes.innerHTML = '';
+        botoes.forEach(btn => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn-' + (btn.estilo || 'primary');
+            b.innerHTML = btn.texto;
+            b.addEventListener('click', () => {
+                fecharModal(btn.valor);
+            });
+            modalBotoes.appendChild(b);
+        });
+
+        // Exibe
+        modalEl.style.display = 'flex';
+
+        // Permite fechar com ESC (resolve como false/null)
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                fecharModal(null);
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+    });
+}
+
+function fecharModal(valor) {
+    modalEl.style.display = 'none';
+    if (modalResolver) {
+        modalResolver(valor);
+        modalResolver = null;
+    }
+}
+
+// Atalhos
+function modalAviso(titulo, mensagem) {
+    return abrirModal({
+        tipo: 'aviso',
+        titulo,
+        mensagem,
+        botoes: [{ texto: 'Entendi', valor: true, estilo: 'primary' }]
+    });
+}
+
+function modalConfirmacao(titulo, mensagem, textoSim = 'Sim, trocar', textoNao = 'Não, manter') {
+    return abrirModal({
+        tipo: 'confirmacao',
+        titulo,
+        mensagem,
+        botoes: [
+            { texto: textoNao, valor: false, estilo: 'cancelar' },
+            { texto: textoSim, valor: true, estilo: 'primary' }
+        ]
+    });
+}
 
 // ============================================================
 // BUSCA CANDIDATOS DO SUPABASE
@@ -24,7 +123,7 @@ async function carregarCandidatos() {
 }
 
 // ============================================================
-// INICIALIZAÇÃO — Busca candidatos antes de liberar login
+// INICIALIZAÇÃO
 // ============================================================
 async function inicializar() {
     const btnLogin = document.getElementById('btn-login');
@@ -41,13 +140,16 @@ async function inicializar() {
         btnLogin.disabled = false;
     } catch (erro) {
         console.error('Erro ao carregar candidatos:', erro);
-        alert("Não foi possível carregar os candidatos. Verifique a conexão e recarregue a página.");
+        await modalAviso(
+            'Erro ao carregar',
+            'Não foi possível carregar os candidatos.<br>Verifique a conexão e recarregue a página.'
+        );
         btnLogin.innerHTML = "Erro ao carregar";
     }
 }
 
 // ============================================================
-// Função auxiliar — busca foto pelo nome
+// AUXILIAR
 // ============================================================
 function getFotoCandidato(nomeCand) {
     const cand = candidatosData.find(c => c.nome === nomeCand);
@@ -55,17 +157,20 @@ function getFotoCandidato(nomeCand) {
 }
 
 // ============================================================
-// LOGIN E VALIDAÇÃO
+// LOGIN
 // ============================================================
 document.getElementById('form-login').addEventListener('submit', async function(e) {
     e.preventDefault();
-    if (carregando) { alert("Aguarde o carregamento dos candidatos."); return; }
+    if (carregando) {
+        await modalAviso('Aguarde', 'Os candidatos ainda estão sendo carregados. Tente novamente em alguns segundos.');
+        return;
+    }
 
     const nomeDigitado = document.getElementById('nome-login').value.trim();
     const emailDigitado = document.getElementById('email-login').value.trim().toLowerCase();
 
     if (!emailDigitado.includes('@')) {
-        alert("Por favor, insira um e-mail válido.");
+        await modalAviso('E-mail inválido', 'Por favor, insira um e-mail válido.');
         return;
     }
 
@@ -94,7 +199,7 @@ document.getElementById('form-login').addEventListener('submit', async function(
             document.getElementById('votacao-section').style.display = 'block';
         }
     } catch (erro) {
-        alert("Erro ao conectar com o servidor. Tente novamente.");
+        await modalAviso('Erro de conexão', 'Não foi possível conectar ao servidor.<br>Tente novamente em instantes.');
     } finally {
         btnLogin.innerHTML = htmlOriginal;
         btnLogin.disabled = false;
@@ -144,6 +249,44 @@ function renderizarCandidatos() {
     });
     container.innerHTML = html;
     atualizarInterfaceNavegacao();
+    aplicarBloqueioTrocaSelecao();
+}
+
+// ============================================================
+// 🚫 BLOQUEIO: não permitir trocar de candidato sem confirmação
+// ============================================================
+function aplicarBloqueioTrocaSelecao() {
+    document.querySelectorAll('#secoes-votacao input[type="radio"]').forEach(radio => {
+        radio.addEventListener('click', async function(e) {
+            const nomeGrupo = this.name;
+
+            // Qual está selecionado atualmente nesse grupo?
+            const atualSelecionado = document.querySelector(`input[name="${nomeGrupo}"]:checked`);
+
+            // Se não havia nenhum, ou é o mesmo que já estava → deixa passar
+            if (!atualSelecionado || atualSelecionado === this) return;
+
+            // Bloqueia a mudança automática
+            e.preventDefault();
+
+            const nomeAnterior = atualSelecionado.value;
+            const nomeNovo = this.value;
+
+            const confirmou = await modalConfirmacao(
+                'Trocar de candidato?',
+                `Você já escolheu <strong>${nomeAnterior}</strong> nesta categoria.<br><br>Deseja trocar por <strong>${nomeNovo}</strong>?`,
+                'Sim, trocar',
+                'Não, manter'
+            );
+
+            if (confirmou) {
+                // Aplica a troca manualmente
+                atualSelecionado.checked = false;
+                this.checked = true;
+            }
+            // Se não confirmou → nada acontece, o antigo permanece
+        });
+    });
 }
 
 // ============================================================
@@ -165,12 +308,21 @@ function atualizarInterfaceNavegacao() {
     }
 }
 
-document.getElementById('btn-proximo').addEventListener('click', () => {
+// ============================================================
+// BOTÃO PRÓXIMO
+// ============================================================
+document.getElementById('btn-proximo').addEventListener('click', async () => {
     const cargoAtual = ordemCargos[etapaAtual];
     const nameAttr = cargoAtual.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+
     if (!document.querySelector(`input[name="${nameAttr}"]:checked`)) {
-        alert(`Selecione quem receberá o seu voto para ${cargoAtual} antes de avançar.`); return;
+        await modalAviso(
+            'Escolha um candidato',
+            `Você ainda não selecionou o seu voto para <strong>${cargoAtual}</strong>.<br><br>Escolha uma opção antes de avançar para a próxima categoria.`
+        );
+        return;
     }
+
     document.getElementById(`etapa-${etapaAtual}`).style.display = 'none';
     etapaAtual++;
     document.getElementById(`etapa-${etapaAtual}`).style.display = 'block';
@@ -178,6 +330,9 @@ document.getElementById('btn-proximo').addEventListener('click', () => {
     window.scrollTo(0, 0); 
 });
 
+// ============================================================
+// BOTÃO ANTERIOR
+// ============================================================
 document.getElementById('btn-anterior').addEventListener('click', () => {
     document.getElementById(`etapa-${etapaAtual}`).style.display = 'none';
     etapaAtual--;
@@ -186,11 +341,19 @@ document.getElementById('btn-anterior').addEventListener('click', () => {
     window.scrollTo(0, 0);
 });
 
-document.getElementById('btn-revisar').addEventListener('click', () => {
+// ============================================================
+// BOTÃO REVISAR
+// ============================================================
+document.getElementById('btn-revisar').addEventListener('click', async () => {
     const cargoAtual = ordemCargos[etapaAtual];
     const nameAttr = cargoAtual.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+
     if (!document.querySelector(`input[name="${nameAttr}"]:checked`)) {
-        alert("Selecione a sua última opção antes de revisar os votos."); return;
+        await modalAviso(
+            'Escolha um candidato',
+            `Você ainda não selecionou o seu voto para <strong>${cargoAtual}</strong>.<br><br>Escolha uma opção antes de revisar os votos.`
+        );
+        return;
     }
     
     const votos = {
@@ -206,6 +369,9 @@ document.getElementById('btn-revisar').addEventListener('click', () => {
     window.scrollTo(0, 0);
 });
 
+// ============================================================
+// BOTÃO VOLTAR PARA EDIÇÃO
+// ============================================================
 document.getElementById('btn-voltar-edicao').addEventListener('click', () => {
     document.getElementById('resumo-section').style.display = 'none';
     document.getElementById('votacao-section').style.display = 'block';
@@ -242,13 +408,19 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
             document.getElementById('header-resumo').innerHTML = `<h2>Comprovante de Votação</h2><p>Votos enviados por <strong>${eleitorAtual.email}</strong>.</p>`;
             document.getElementById('mensagem-sucesso').style.display = 'block';
         } else {
-            alert("Erro: O seu E-mail já consta na base de dados.");
+            await modalAviso(
+                'Voto já registado',
+                'Este e-mail já consta na base de dados.<br>Você não pode votar novamente.'
+            );
             this.innerHTML = htmlOriginal;
             this.disabled = false;
             document.getElementById('btn-voltar-edicao').style.display = 'flex';
         }
     } catch (erro) {
-        alert("Erro de comunicação com o servidor.");
+        await modalAviso(
+            'Erro de comunicação',
+            'Não foi possível enviar os seus votos.<br>Tente novamente em instantes.'
+        );
         this.innerHTML = htmlOriginal;
         this.disabled = false;
         document.getElementById('btn-voltar-edicao').style.display = 'flex';

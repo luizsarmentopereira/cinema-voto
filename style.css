@@ -115,6 +115,7 @@ body.dark-mode #mensagem-sucesso {
     background: rgba(52, 211, 153, 0.10);
     border-color: rgba(52, 211, 153, 0.35);
 }
+body.dark-mode .card-preview-btn { background: var(--card-bg); }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -430,6 +431,64 @@ button:disabled {
 
 button:hover .btn-icon { transform: scale(1.08); }
 
+/* ============================================================
+   🆕 TOGGLE DE MODO (passo a passo / tudo de uma vez)
+   ============================================================ */
+.modo-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin: 0 auto 22px;
+    padding: 5px;
+    background: var(--input-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    max-width: 420px;
+    box-shadow: var(--shadow-sm);
+}
+
+.modo-btn {
+    flex: 1;
+    padding: 11px 16px;
+    margin: 0;
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    box-shadow: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: var(--transition-fast);
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+}
+
+.modo-btn::before { display: none; }
+.modo-btn .btn-icon { width: 1em; height: 1em; }
+
+.modo-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    transform: none;
+    box-shadow: none;
+}
+
+.modo-btn.active {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: white;
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.15) inset,
+        0 5px 12px -3px rgba(139,30,92,0.45);
+}
+
+body.dark-mode .modo-btn.active { color: #1F1309; }
+
 .progress-wrapper {
     margin-bottom: 36px;
     background: linear-gradient(135deg, var(--primary-light), var(--card-bg-soft));
@@ -594,6 +653,51 @@ body.dark-mode .card-candidato {
         0 0 0 2px var(--gold-color),
         var(--shadow-hover);
 }
+
+/* ============================================================
+   🆕 BOTÃO DE PREVIEW NOS CARDS
+   ============================================================ */
+.card-preview-btn {
+    position: absolute;
+    top: 30px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border-radius: 50%;
+    background: var(--input-bg);
+    color: var(--text-muted);
+    border: 1.5px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 6;
+    opacity: 0;
+    transition: var(--transition-fast);
+    box-shadow: 0 2px 6px -2px rgba(31,19,9,0.15);
+}
+
+.card-preview-btn::before { display: none; }
+.card-preview-btn svg { width: 15px; height: 15px; }
+
+.candidato-item:hover .card-preview-btn { opacity: 1; }
+
+@media (hover: none) {
+    .card-preview-btn { opacity: 1; }
+}
+
+.card-preview-btn:hover {
+    background: var(--gold-color);
+    color: white;
+    border-color: var(--gold-color);
+    transform: scale(1.12);
+    box-shadow: 0 4px 10px -2px rgba(201,153,42,0.55);
+}
+
+.card-preview-btn:active { transform: scale(0.96); }
 
 /* ============================================================
    🏅 BADGE DE POSIÇÃO
@@ -977,7 +1081,202 @@ body.dark-mode .resumo-card.posicao-pos-3 { background: linear-gradient(180deg, 
 }
 
 /* ============================================================
-   MODAL
+   🆕 COMPROVANTE — ações de partilha
+   ============================================================ */
+.comprovante-acoes {
+    display: none;
+    gap: 12px;
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px solid var(--border-color);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.comprovante-acoes button {
+    margin-top: 0;
+    flex: 1;
+    min-width: 200px;
+    max-width: 260px;
+    padding: 14px 22px;
+    font-size: 14px;
+}
+
+/* ============================================================
+   🆕 MODAL DE PREVIEW DO CANDIDATO
+   ============================================================ */
+.preview-box {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: 44px 32px 32px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow:
+        var(--shadow-md),
+        0 30px 80px -20px rgba(20, 12, 6, 0.4),
+        0 0 0 1px var(--border-color);
+    text-align: center;
+    position: relative;
+    animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: visible;
+}
+
+.preview-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 4px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright), var(--gold-deep));
+}
+
+.preview-fechar {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border-radius: 50%;
+    background: var(--input-bg);
+    color: var(--text-muted);
+    border: 1.5px solid var(--border-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
+    z-index: 5;
+    box-shadow: none;
+}
+
+.preview-fechar::before { display: none; }
+.preview-fechar svg { width: 16px; height: 16px; }
+
+.preview-fechar:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: rotate(90deg);
+}
+
+.preview-foto-wrap {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 20px;
+}
+
+.preview-foto-wrap img {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow:
+        0 12px 32px -8px rgba(31,19,9,0.25),
+        0 0 0 5px var(--card-bg),
+        0 0 0 7px var(--gold-color);
+    border: none;
+    animation: previewFotoPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes previewFotoPop {
+    0%   { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.preview-badge-pos {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: #3A2700;
+    border: 3px solid #FFFFFF;
+    box-shadow: 0 6px 16px -4px rgba(31,19,9,0.3);
+    animation: badgePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.preview-badge-pos.visivel { display: flex; }
+
+.preview-badge-pos.pos-1 {
+    background: radial-gradient(circle at 30% 25%, #FFF3B0 0%, #E8B93B 35%, #B8871A 75%, #6B4B00 100%);
+}
+.preview-badge-pos.pos-2 {
+    background: radial-gradient(circle at 30% 25%, #FFFFFF 0%, #D4D4D8 35%, #A1A1AA 75%, #52525B 100%);
+    color: #1A1A1A;
+}
+.preview-badge-pos.pos-3 {
+    background: radial-gradient(circle at 30% 25%, #F5C99A 0%, #C28658 35%, #8B5A2B 75%, #4A2E12 100%);
+    color: #2A1500;
+}
+
+.preview-box h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin: 0 0 8px;
+    padding: 0;
+    letter-spacing: 0.01em;
+    line-height: 1.25;
+}
+
+.preview-serie {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold-color);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin: 0 0 6px;
+    font-family: 'Cinzel', serif;
+}
+
+.preview-categoria {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0 0 26px;
+    letter-spacing: 0.02em;
+    font-weight: 500;
+}
+
+.preview-acoes {
+    display: flex;
+    gap: 10px;
+}
+
+.preview-acoes button {
+    margin-top: 0;
+    padding: 14px 18px;
+    font-size: 14px;
+}
+
+.preview-acoes #preview-escolher { flex: 1.4; }
+.preview-acoes #preview-cancelar { flex: 1; }
+
+#preview-escolher.btn-remover {
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.2) inset,
+        0 10px 24px -6px rgba(220,38,38,0.5);
+}
+
+#preview-escolher.btn-remover:hover {
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.25) inset,
+        0 16px 32px -6px rgba(220,38,38,0.6);
+}
+
+/* ============================================================
+   MODAL GENÉRICO (aviso / confirmação)
    ============================================================ */
 .modal-overlay {
     position: fixed;
@@ -1437,51 +1736,6 @@ tr:last-child td { border-bottom: none; }
     vertical-align: middle;
 }
 
-::-webkit-scrollbar { width: 12px; height: 12px; }
-::-webkit-scrollbar-track { background: var(--input-bg); border-radius: 10px; }
-::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, var(--gold-bright), var(--gold-color));
-    border-radius: 10px;
-    border: 3px solid var(--input-bg);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
-}
-
-@media (max-width: 640px) {
-    body { padding: 24px 14px; }
-    .container { padding: 52px 24px 30px; border-radius: 22px; }
-    .container::after {
-        width: 52px; height: 52px;
-        top: -26px;
-        box-shadow:
-            0 8px 16px rgba(201,153,42,0.4),
-            0 0 0 3px var(--card-bg),
-            0 0 0 4px rgba(201,153,42,0.25),
-            -32px -10px 0 -17px rgba(139,30,92,0.8),
-            30px -13px 0 -18px rgba(194,65,12,0.8),
-            -24px 15px 0 -19px rgba(21,128,61,0.8),
-            28px 16px 0 -18px rgba(201,153,42,0.8);
-    }
-    h1 { font-size: 24px; gap: 10px; }
-    h1 .icon-title { width: 28px; height: 28px; }
-    h2 { font-size: 19px; }
-    .cargo-header h2 { font-size: 24px; }
-    .grid-candidatos { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 16px; }
-    .card-candidato { padding: 20px 14px 18px; }
-    .card-candidato img { width: 76px; height: 76px; }
-    .card-candidato p { font-size: 14px; }
-    .navegacao-botoes { flex-direction: column; gap: 10px; margin-top: 30px; padding-top: 20px; }
-    .resumo-linha { grid-template-columns: 1fr; }
-    .insight-card .valor { font-size: 22px; }
-    .theme-toggle { top: 12px; right: 12px; width: 42px; height: 42px; }
-}
-
 /* ============================================================
    🔍 BARRA DE BUSCA DE CANDIDATOS
    ============================================================ */
@@ -1538,7 +1792,6 @@ tr:last-child td { border-bottom: none; }
     font-weight: 400;
 }
 
-/* Botão limpar (X) */
 .busca-limpar {
     position: absolute;
     right: 10px;
@@ -1575,7 +1828,6 @@ tr:last-child td { border-bottom: none; }
 
 .busca-limpar:active { transform: translateY(-50%) scale(0.95); }
 
-/* Mensagem "sem resultado" */
 .busca-sem-resultado {
     display: none;
     text-align: center;
@@ -1592,11 +1844,64 @@ tr:last-child td { border-bottom: none; }
 
 .busca-sem-resultado.visivel { display: block; }
 
-/* Ajuste no mobile */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--input-bg); border-radius: 10px; }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold-color));
+    border-radius: 10px;
+    border: 3px solid var(--input-bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
 @media (max-width: 640px) {
+    body { padding: 24px 14px; }
+    .container { padding: 52px 24px 30px; border-radius: 22px; }
+    .container::after {
+        width: 52px; height: 52px;
+        top: -26px;
+        box-shadow:
+            0 8px 16px rgba(201,153,42,0.4),
+            0 0 0 3px var(--card-bg),
+            0 0 0 4px rgba(201,153,42,0.25),
+            -32px -10px 0 -17px rgba(139,30,92,0.8),
+            30px -13px 0 -18px rgba(194,65,12,0.8),
+            -24px 15px 0 -19px rgba(21,128,61,0.8),
+            28px 16px 0 -18px rgba(201,153,42,0.8);
+    }
+    h1 { font-size: 24px; gap: 10px; }
+    h1 .icon-title { width: 28px; height: 28px; }
+    h2 { font-size: 19px; }
+    .cargo-header h2 { font-size: 24px; }
+    .grid-candidatos { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 16px; }
+    .card-candidato { padding: 20px 14px 18px; }
+    .card-candidato img { width: 76px; height: 76px; }
+    .card-candidato p { font-size: 14px; }
+    .navegacao-botoes { flex-direction: column; gap: 10px; margin-top: 30px; padding-top: 20px; }
+    .resumo-linha { grid-template-columns: 1fr; }
+    .insight-card .valor { font-size: 22px; }
+    .theme-toggle { top: 12px; right: 12px; width: 42px; height: 42px; }
     .busca-wrapper { max-width: 100%; }
     .busca-wrapper input.busca-candidato {
         font-size: 14px;
         padding: 12px 42px 12px 42px;
     }
+    .modo-toggle { max-width: 100%; }
+    .modo-btn { padding: 10px 12px; font-size: 12px; }
+    .modo-btn .btn-icon { display: none; }
+    .preview-box { padding: 40px 22px 24px; }
+    .preview-foto-wrap img { width: 130px; height: 130px; }
+    .preview-box h3 { font-size: 20px; }
+    .preview-badge-pos { width: 40px; height: 40px; font-size: 14px; }
+    .preview-acoes { flex-direction: column-reverse; }
+    .preview-acoes button { width: 100%; }
+    .comprovante-acoes { flex-direction: column; }
+    .comprovante-acoes button { min-width: 100%; max-width: 100%; }
+    .card-preview-btn { top: 26px; right: 8px; }
 }

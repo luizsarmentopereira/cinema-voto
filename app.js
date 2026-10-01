@@ -30,8 +30,8 @@ let eleitorAtual = { nome: '', email: '' };
 const ordemCargos = ["Personagem Feminino", "Personagem Masculino", "Melhor Pet"];
 let etapaAtual = 0;
 let carregando = true;
+let modoVotacao = 'etapas'; // 'etapas' | 'rapido'
 
-// Escolhas por categoria: { 1: "Nome1", 2: "Nome2", 3: "Nome3" }
 const escolhas = {
     personagem_feminino:  { 1: null, 2: null, 3: null },
     personagem_masculino: { 1: null, 2: null, 3: null },
@@ -92,6 +92,131 @@ function modalAviso(titulo, mensagem) {
         tipo: 'aviso', titulo, mensagem,
         botoes: [{ texto: 'Entendi', valor: true, estilo: 'primary' }]
     });
+}
+
+// ============================================================
+// 🆕 PREVIEW MODAL
+// ============================================================
+let previewCandidatoAtual = null;
+
+function abrirPreview(catKey, nomeCand) {
+    const cand = candidatosData.find(c => c.nome === nomeCand);
+    if (!cand) return;
+    previewCandidatoAtual = { catKey, nome: nomeCand };
+
+    const slots = escolhas[catKey];
+    const pos = [1, 2, 3].find(p => slots[p] === nomeCand);
+
+    document.getElementById('preview-foto').src = cand.foto;
+    document.getElementById('preview-foto').alt = cand.nome;
+    document.getElementById('preview-nome').innerText = cand.nome;
+    document.getElementById('preview-serie').innerText = cand.serie;
+    document.getElementById('preview-categoria').innerText = cand.cargo;
+
+    const badge = document.getElementById('preview-badge-pos');
+    if (pos) {
+        badge.innerText = `${pos}º`;
+        badge.className = 'preview-badge-pos pos-' + pos + ' visivel';
+    } else {
+        badge.className = 'preview-badge-pos';
+    }
+
+    const btnEscolher = document.getElementById('preview-escolher');
+    const txtEscolher = document.getElementById('preview-escolher-texto');
+    if (pos) {
+        txtEscolher.innerText = `Remover (${pos}º lugar)`;
+        btnEscolher.classList.add('btn-remover');
+    } else {
+        txtEscolher.innerText = 'Escolher este';
+        btnEscolher.classList.remove('btn-remover');
+    }
+
+    document.getElementById('modal-preview').style.display = 'flex';
+}
+
+function fecharPreview() {
+    document.getElementById('modal-preview').style.display = 'none';
+    previewCandidatoAtual = null;
+}
+
+document.getElementById('preview-fechar').addEventListener('click', fecharPreview);
+document.getElementById('preview-cancelar').addEventListener('click', fecharPreview);
+document.getElementById('modal-preview').addEventListener('click', (e) => {
+    if (e.target.id === 'modal-preview') fecharPreview();
+});
+document.getElementById('preview-escolher').addEventListener('click', () => {
+    if (!previewCandidatoAtual) return;
+    toggleCandidato(previewCandidatoAtual.catKey, previewCandidatoAtual.nome);
+    fecharPreview();
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('modal-preview').style.display === 'flex') {
+        fecharPreview();
+    }
+});
+
+// ============================================================
+// 💾 PROGRESSO NO LOCALSTORAGE
+// ============================================================
+function chaveProgresso(email) {
+    return `votacao_progresso_${(email || '').toLowerCase()}`;
+}
+
+function salvarProgresso() {
+    if (!eleitorAtual.email) return;
+    try {
+        localStorage.setItem(chaveProgresso(eleitorAtual.email), JSON.stringify({
+            escolhas,
+            modoVotacao,
+            etapaAtual,
+            salvoEm: Date.now()
+        }));
+    } catch (e) { console.warn('Não foi possível salvar progresso:', e); }
+}
+
+function restaurarProgresso(email) {
+    try {
+        const raw = localStorage.getItem(chaveProgresso(email));
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        if (!data || !data.escolhas) return false;
+
+        ['personagem_feminino', 'personagem_masculino', 'melhor_pet'].forEach(k => {
+            if (data.escolhas[k]) {
+                [1, 2, 3].forEach(p => {
+                    const nome = data.escolhas[k][p];
+                    if (nome && candidatosData.some(c => c.nome === nome)) {
+                        escolhas[k][p] = nome;
+                    }
+                });
+            }
+        });
+        if (data.modoVotacao === 'rapido' || data.modoVotacao === 'etapas') {
+            modoVotacao = data.modoVotacao;
+        }
+        if (typeof data.etapaAtual === 'number' && data.etapaAtual >= 0 && data.etapaAtual < ordemCargos.length) {
+            etapaAtual = data.etapaAtual;
+        }
+        return true;
+    } catch (e) {
+        console.warn('Erro ao restaurar progresso:', e);
+        return false;
+    }
+}
+
+function limparProgresso(email) {
+    if (!email) return;
+    try { localStorage.removeItem(chaveProgresso(email)); } catch (e) {}
+}
+
+function calcularTotalSelecionados() {
+    let total = 0;
+    ordemCargos.forEach(cargo => {
+        const catKey = chaveCategoria(cargo);
+        [1, 2, 3].forEach(p => { if (escolhas[catKey][p]) total++; });
+    });
+    return total;
 }
 
 // ============================================================
@@ -176,6 +301,21 @@ document.getElementById('form-login').addEventListener('submit', async function(
             document.querySelectorAll('.nome-exibicao').forEach(el => el.innerText = nomeDigitado);
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('votacao-section').style.display = 'block';
+
+            // 🆕 Restaurar progresso salvo
+            const restaurado = restaurarProgresso(emailDigitado);
+            if (restaurado) {
+                atualizarBadges();
+                atualizarContador();
+                atualizarInterfaceNavegacao();
+                // Pequeno delay para garantir que o DOM já esteja visível
+                setTimeout(() => {
+                    modalAviso(
+                        'Bem-vindo de volta! 👋',
+                        'Encontramos escolhas guardadas do seu último acesso.<br>Você pode continuar de onde parou.'
+                    );
+                }, 300);
+            }
         }
     } catch (erro) {
         await modalAviso('Erro de conexão', 'Não foi possível conectar ao servidor.<br>Tente novamente em instantes.');
@@ -238,6 +378,12 @@ function renderizarCandidatos() {
                     html += `
                         <div class="candidato-item" data-nome="${cand.nome}" data-cat="${key}">
                             <div class="badge-pos"></div>
+                            <button type="button" class="card-preview-btn" data-cat="${key}" data-nome="${cand.nome}" aria-label="Ver detalhes de ${cand.nome}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </button>
                             <div class="card-candidato">
                                 <img src="${cand.foto}" alt="${cand.nome}" loading="lazy">
                                 <p>${cand.nome}</p>
@@ -257,10 +403,18 @@ function renderizarCandidatos() {
     });
     container.innerHTML = html;
 
-    // Registra o clique em cada card
+    // Clique nos cards (seleciona)
     document.querySelectorAll('.candidato-item').forEach(item => {
         item.addEventListener('click', () => {
             toggleCandidato(item.dataset.cat, item.dataset.nome);
+        });
+    });
+
+    // 🆕 Clique no botão de preview (não propaga)
+    document.querySelectorAll('.card-preview-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            abrirPreview(btn.dataset.cat, btn.dataset.nome);
         });
     });
 
@@ -277,7 +431,6 @@ function renderizarCandidatos() {
         });
     });
 
-    // Listener do botão limpar
     document.querySelectorAll('.busca-limpar').forEach(btn => {
         btn.addEventListener('click', () => {
             const catKey = btn.dataset.cat;
@@ -316,7 +469,6 @@ function filtrarCandidatos(catKey, termo) {
         const serieNorm = normalizarBusca(item.closest('.serie-grupo')?.dataset.serie || '');
         const selecionado = [1, 2, 3].some(p => slots[p] === nome);
 
-        // Mostra se: sem busca, OU bate no nome, OU bate na série, OU já está selecionado
         const match = !termoNorm
             || nomeNorm.includes(termoNorm)
             || serieNorm.includes(termoNorm)
@@ -325,13 +477,11 @@ function filtrarCandidatos(catKey, termo) {
         item.classList.toggle('oculto', !match);
     });
 
-    // Esconde grupos de séries que ficaram sem candidatos visíveis
     etapa.querySelectorAll('.serie-grupo').forEach(grupo => {
         const visiveis = grupo.querySelectorAll('.candidato-item:not(.oculto)').length;
         grupo.classList.toggle('oculto', visiveis === 0);
     });
 
-    // Mensagem "sem resultado"
     const semResultado = etapa.querySelector(`.busca-sem-resultado[data-cat="${catKey}"]`);
     if (semResultado) {
         const totalVisiveis = etapa.querySelectorAll('.candidato-item:not(.oculto)').length;
@@ -363,8 +513,9 @@ function toggleCandidato(catKey, nomeCand) {
 
     atualizarBadges();
     atualizarContador();
+    atualizarInterfaceNavegacao(); // atualiza progresso do modo rápido
+    salvarProgresso(); // 💾
 
-    // Se há uma busca ativa, refiltra para atualizar a visibilidade dos selecionados
     const inputBusca = document.querySelector(`.busca-candidato[data-cat="${catKey}"]`);
     if (inputBusca && inputBusca.value.trim().length > 0) {
         filtrarCandidatos(catKey, inputBusca.value);
@@ -380,7 +531,7 @@ function reorganizarSlots(catKey) {
 }
 
 // ============================================================
-// ATUALIZA BADGES E ESTADOS VISUAIS DOS CARDS
+// ATUALIZA BADGES
 // ============================================================
 function atualizarBadges() {
     document.querySelectorAll('.badge-pos').forEach(el => el.innerHTML = '');
@@ -410,7 +561,7 @@ function atualizarBadges() {
 }
 
 // ============================================================
-// ATUALIZA CONTADOR DE CADA CATEGORIA
+// ATUALIZA CONTADOR
 // ============================================================
 function atualizarContador() {
     ordemCargos.forEach(cargo => {
@@ -430,20 +581,58 @@ function atualizarContador() {
 // NAVEGAÇÃO
 // ============================================================
 function atualizarInterfaceNavegacao() {
-    const progresso = ((etapaAtual + 1) / ordemCargos.length) * 100;
-    document.getElementById('progresso-barra').style.width = `${progresso}%`;
-    document.getElementById('progresso-texto').innerText = `Passo ${etapaAtual + 1} de ${ordemCargos.length}: ${ordemCargos[etapaAtual]}`;
+    const isRapido = modoVotacao === 'rapido';
 
-    document.getElementById('btn-anterior').style.display = etapaAtual === 0 ? 'none' : 'flex';
+    // Sincroniza botões do toggle
+    document.querySelectorAll('.modo-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.modo === modoVotacao);
+    });
 
-    if (etapaAtual === ordemCargos.length - 1) {
+    if (isRapido) {
+        ordemCargos.forEach((cargo, i) => {
+            const el = document.getElementById(`etapa-${i}`);
+            if (el) el.style.display = 'block';
+        });
+        document.getElementById('btn-anterior').style.display = 'none';
         document.getElementById('btn-proximo').style.display = 'none';
         document.getElementById('btn-revisar').style.display = 'flex';
+
+        const total = calcularTotalSelecionados();
+        const pct = (total / (ordemCargos.length * 3)) * 100;
+        document.getElementById('progresso-barra').style.width = `${pct}%`;
+        document.getElementById('progresso-texto').innerText = `Modo rápido · ${total} de ${ordemCargos.length * 3} escolhas`;
     } else {
-        document.getElementById('btn-proximo').style.display = 'flex';
-        document.getElementById('btn-revisar').style.display = 'none';
+        ordemCargos.forEach((cargo, i) => {
+            const el = document.getElementById(`etapa-${i}`);
+            if (el) el.style.display = i === etapaAtual ? 'block' : 'none';
+        });
+        document.getElementById('btn-anterior').style.display = etapaAtual === 0 ? 'none' : 'flex';
+
+        if (etapaAtual === ordemCargos.length - 1) {
+            document.getElementById('btn-proximo').style.display = 'none';
+            document.getElementById('btn-revisar').style.display = 'flex';
+        } else {
+            document.getElementById('btn-proximo').style.display = 'flex';
+            document.getElementById('btn-revisar').style.display = 'none';
+        }
+
+        const pct = ((etapaAtual + 1) / ordemCargos.length) * 100;
+        document.getElementById('progresso-barra').style.width = `${pct}%`;
+        document.getElementById('progresso-texto').innerText = `Passo ${etapaAtual + 1} de ${ordemCargos.length}: ${ordemCargos[etapaAtual]}`;
     }
 }
+
+// 🆕 Toggle do modo
+document.querySelectorAll('.modo-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const novoModo = btn.dataset.modo;
+        if (novoModo === modoVotacao) return;
+        modoVotacao = novoModo;
+        atualizarInterfaceNavegacao();
+        salvarProgresso();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+});
 
 document.getElementById('btn-proximo').addEventListener('click', async () => {
     const cargoAtual = ordemCargos[etapaAtual];
@@ -459,33 +648,43 @@ document.getElementById('btn-proximo').addEventListener('click', async () => {
         return;
     }
 
-    document.getElementById(`etapa-${etapaAtual}`).style.display = 'none';
     etapaAtual++;
-    document.getElementById(`etapa-${etapaAtual}`).style.display = 'block';
     atualizarInterfaceNavegacao();
+    salvarProgresso();
     window.scrollTo(0, 0);
 });
 
 document.getElementById('btn-anterior').addEventListener('click', () => {
-    document.getElementById(`etapa-${etapaAtual}`).style.display = 'none';
     etapaAtual--;
-    document.getElementById(`etapa-${etapaAtual}`).style.display = 'block';
     atualizarInterfaceNavegacao();
+    salvarProgresso();
     window.scrollTo(0, 0);
 });
 
 document.getElementById('btn-revisar').addEventListener('click', async () => {
-    const cargoAtual = ordemCargos[etapaAtual];
-    const catKey = chaveCategoria(cargoAtual);
-    const slots = escolhas[catKey];
-    const preenchidos = [1, 2, 3].filter(p => slots[p] !== null).length;
+    if (modoVotacao === 'rapido') {
+        const total = calcularTotalSelecionados();
+        if (total < ordemCargos.length * 3) {
+            const faltam = (ordemCargos.length * 3) - total;
+            await modalAviso(
+                'Faltam escolhas',
+                `Você ainda não completou todas as categorias.<br><br>Faltam <strong>${faltam}</strong> escolha(s) para revisar.`
+            );
+            return;
+        }
+    } else {
+        const cargoAtual = ordemCargos[etapaAtual];
+        const catKey = chaveCategoria(cargoAtual);
+        const slots = escolhas[catKey];
+        const preenchidos = [1, 2, 3].filter(p => slots[p] !== null).length;
 
-    if (preenchidos < 3) {
-        await modalAviso(
-            'Complete as 3 posições',
-            `Na categoria <strong>${cargoAtual}</strong> você escolheu apenas ${preenchidos} de 3.<br><br>Complete antes de revisar.`
-        );
-        return;
+        if (preenchidos < 3) {
+            await modalAviso(
+                'Complete as 3 posições',
+                `Na categoria <strong>${cargoAtual}</strong> você escolheu apenas ${preenchidos} de 3.<br><br>Complete antes de revisar.`
+            );
+            return;
+        }
     }
 
     preencherListaResumo();
@@ -497,6 +696,161 @@ document.getElementById('btn-revisar').addEventListener('click', async () => {
 document.getElementById('btn-voltar-edicao').addEventListener('click', () => {
     document.getElementById('resumo-section').style.display = 'none';
     document.getElementById('votacao-section').style.display = 'block';
+});
+
+// ============================================================
+// 🆕 CONFETES
+// ============================================================
+function dispararConfete() {
+    if (typeof confetti !== 'function') return;
+
+    const cores = ['#C9992A', '#E8B93B', '#8B1E5C', '#A62270', '#15803D', '#FFFFFF'];
+    const duracao = 3500;
+    const fim = Date.now() + duracao;
+
+    (function frame() {
+        confetti({
+            particleCount: 4,
+            angle: 60,
+            spread: 60,
+            origin: { x: 0, y: 0.75 },
+            colors: cores,
+            scalar: 0.9
+        });
+        confetti({
+            particleCount: 4,
+            angle: 120,
+            spread: 60,
+            origin: { x: 1, y: 0.75 },
+            colors: cores,
+            scalar: 0.9
+        });
+        if (Date.now() < fim) requestAnimationFrame(frame);
+    })();
+
+    setTimeout(() => {
+        confetti({
+            particleCount: 150,
+            spread: 100,
+            origin: { y: 0.55 },
+            colors: cores,
+            startVelocity: 45
+        });
+    }, 200);
+
+    setTimeout(() => {
+        confetti({
+            particleCount: 80,
+            angle: 90,
+            spread: 360,
+            origin: { y: 0.5 },
+            colors: cores,
+            startVelocity: 30,
+            gravity: 0.8
+        });
+    }, 700);
+}
+
+// ============================================================
+// 🆕 COMPROVANTE COMPARTILHÁVEL
+// ============================================================
+async function gerarImagemComprovante() {
+    if (typeof html2canvas !== 'function') {
+        await modalAviso('Indisponível', 'A biblioteca de geração de imagem não carregou.<br>Verifique a conexão.');
+        return null;
+    }
+    const alvo = document.getElementById('resumo-section');
+    if (!alvo) return null;
+
+    const bgCor = document.body.classList.contains('dark-mode') ? '#1A1220' : '#FFFFFF';
+
+    try {
+        const canvas = await html2canvas(alvo, {
+            backgroundColor: bgCor,
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            ignoreElements: (el) => el.classList.contains('no-capture') || el.id === 'botoes-resumo'
+        });
+        return canvas;
+    } catch (e) {
+        console.error('Erro ao gerar imagem:', e);
+        return null;
+    }
+}
+
+document.getElementById('btn-baixar-comprovante').addEventListener('click', async function() {
+    const original = this.innerHTML;
+    this.innerHTML = 'Gerando...';
+    this.disabled = true;
+
+    const canvas = await gerarImagemComprovante();
+    if (canvas) {
+        try {
+            const link = document.createElement('a');
+            const slug = (eleitorAtual.email || 'comprovante').split('@')[0].replace(/[^a-z0-9]/gi, '-');
+            link.download = `comprovante-melhores-series-${slug}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch (e) {
+            await modalAviso('Erro', 'Não foi possível baixar a imagem.');
+        }
+    }
+
+    this.innerHTML = original;
+    this.disabled = false;
+});
+
+document.getElementById('btn-compartilhar-comprovante').addEventListener('click', async function() {
+    const original = this.innerHTML;
+    this.innerHTML = 'Preparando...';
+    this.disabled = true;
+
+    const canvas = await gerarImagemComprovante();
+    if (!canvas) {
+        this.innerHTML = original;
+        this.disabled = false;
+        return;
+    }
+
+    canvas.toBlob(async (blob) => {
+        if (!blob) {
+            this.innerHTML = original;
+            this.disabled = false;
+            return;
+        }
+        const file = new File([blob], 'comprovante-melhores-series.png', { type: 'image/png' });
+        const texto = `🎬 Acabei de votar na Premiação Melhores das Séries 2026! Confira o meu comprovante.`;
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: 'Meu comprovante de votação',
+                    text: texto
+                });
+            } catch (e) {
+                if (e.name !== 'AbortError') console.warn('Erro ao compartilhar:', e);
+            }
+        } else {
+            try {
+                const link = document.createElement('a');
+                const slug = (eleitorAtual.email || 'comprovante').split('@')[0].replace(/[^a-z0-9]/gi, '-');
+                link.download = `comprovante-melhores-series-${slug}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                await modalAviso(
+                    'Imagem baixada! 📸',
+                    'O seu dispositivo não suporta partilha direta.<br>A imagem foi salva — agora você pode compartilhá-la manualmente.'
+                );
+            } catch (e) {
+                await modalAviso('Erro', 'Não foi possível gerar o comprovante.');
+            }
+        }
+
+        this.innerHTML = original;
+        this.disabled = false;
+    }, 'image/png');
 });
 
 // ============================================================
@@ -529,9 +883,17 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
         });
 
         if (resposta.ok) {
+            // 🎉 Confete
+            dispararConfete();
+
             this.style.display = 'none';
+            document.getElementById('botoes-resumo').style.display = 'none';
             document.getElementById('header-resumo').innerHTML = `<h2>Comprovante de Votação</h2><p>Votos enviados por <strong>${eleitorAtual.email}</strong>.</p>`;
             document.getElementById('mensagem-sucesso').style.display = 'block';
+            document.getElementById('comprovante-acoes').style.display = 'flex';
+
+            // 💾 Limpa progresso
+            limparProgresso(eleitorAtual.email);
         } else {
             await modalAviso('Voto já registado', 'Este e-mail já consta na base de dados.<br>Você não pode votar novamente.');
             this.innerHTML = htmlOriginal;
@@ -601,6 +963,10 @@ function mostrarEcraRecibo(dadosDB) {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('resumo-section').style.display = 'block';
 
+    // Guarda dados do eleitor para o comprovante
+    eleitorAtual.nome = dadosDB.nome_completo;
+    eleitorAtual.email = dadosDB.email;
+
     document.getElementById('header-resumo').innerHTML = `
         <h2 style="color: #1a7f37;">Voto Já Registrado!</h2>
         <p>Identificamos que <strong>${dadosDB.nome_completo}</strong> (${dadosDB.email}) já participou da votação. Abaixo estão as suas escolhas:</p>
@@ -608,6 +974,7 @@ function mostrarEcraRecibo(dadosDB) {
 
     document.getElementById('botoes-resumo').style.display = 'none';
     document.getElementById('mensagem-sucesso').style.display = 'none';
+    document.getElementById('comprovante-acoes').style.display = 'flex';
 
     preencherListaResumo(dadosDB);
 }

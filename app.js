@@ -1,4 +1,26 @@
+// ============================================================
+// 🌙 TEMA CLARO / ESCURO
+// ============================================================
+(function initTema() {
+    const temaSalvo = localStorage.getItem('tema');
+    if (temaSalvo === 'dark') {
+        document.body.classList.add('dark-mode');
+    }
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btnTema = document.getElementById('theme-toggle');
+    if (!btnTema) return;
+    btnTema.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const temaAtual = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+        localStorage.setItem('tema', temaAtual);
+    });
+});
+
+// ============================================================
 // ⚠️ Credenciais do Supabase
+// ============================================================
 const supabaseUrl = 'https://ypyhbuoglipxsyazsxoj.supabase.co';
 const supabaseKey = 'sb_publishable_ufcIVBj-f_fHQqnecaxEfw_50Cslvyx';
 
@@ -11,11 +33,10 @@ const ordemCargos = ["Personagem Feminino", "Personagem Masculino", "Melhor Pet"
 let etapaAtual = 0;
 let carregando = true;
 
-// Guarda a última escolha confirmada por categoria (evita troca acidental)
 const selecoesConfirmadas = {};
 
 // ============================================================
-// ÍCONES SVG (para uso no modal)
+// ÍCONES DO MODAL
 // ============================================================
 const ICONES_MODAL = {
     aviso: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
@@ -24,7 +45,7 @@ const ICONES_MODAL = {
 };
 
 // ============================================================
-// 🎬 MODAL CUSTOMIZADO
+// MODAL CUSTOMIZADO
 // ============================================================
 const modalEl = document.getElementById('modal-custom');
 const modalIconWrapper = document.getElementById('modal-icon-wrapper');
@@ -35,44 +56,26 @@ const modalBotoes = document.getElementById('modal-botoes');
 
 let modalResolver = null;
 
-/**
- * Abre o modal e retorna uma Promise.
- * @param {Object} opts
- * @param {string} opts.tipo     'aviso' | 'confirmacao' | 'erro'
- * @param {string} opts.titulo
- * @param {string} opts.mensagem  (aceita HTML simples como <strong>)
- * @param {Array}  opts.botoes    [{ texto, valor, estilo }]
- *        estilo: 'primary' | 'cancelar' | 'perigo'
- */
 function abrirModal({ tipo = 'aviso', titulo, mensagem, botoes }) {
     return new Promise(resolve => {
         modalResolver = resolve;
-
-        // Aplica ícone e cor
         modalIconWrapper.className = 'modal-icon-wrapper tipo-' + tipo;
         modalIcon.innerHTML = ICONES_MODAL[tipo] || ICONES_MODAL.aviso;
-
-        // Textos
         modalTitulo.innerText = titulo;
         modalMensagem.innerHTML = mensagem;
 
-        // Botões
         modalBotoes.innerHTML = '';
         botoes.forEach(btn => {
             const b = document.createElement('button');
             b.type = 'button';
             b.className = 'btn-' + (btn.estilo || 'primary');
             b.innerHTML = btn.texto;
-            b.addEventListener('click', () => {
-                fecharModal(btn.valor);
-            });
+            b.addEventListener('click', () => fecharModal(btn.valor));
             modalBotoes.appendChild(b);
         });
 
-        // Exibe
         modalEl.style.display = 'flex';
 
-        // Permite fechar com ESC (resolve como null)
         const escHandler = (e) => {
             if (e.key === 'Escape') {
                 fecharModal(null);
@@ -91,12 +94,10 @@ function fecharModal(valor) {
     }
 }
 
-// Atalhos
 function modalAviso(titulo, mensagem) {
     return abrirModal({
         tipo: 'aviso',
-        titulo,
-        mensagem,
+        titulo, mensagem,
         botoes: [{ texto: 'Entendi', valor: true, estilo: 'primary' }]
     });
 }
@@ -104,8 +105,7 @@ function modalAviso(titulo, mensagem) {
 function modalConfirmacao(titulo, mensagem, textoSim = 'Sim, trocar', textoNao = 'Não, manter') {
     return abrirModal({
         tipo: 'confirmacao',
-        titulo,
-        mensagem,
+        titulo, mensagem,
         botoes: [
             { texto: textoNao, valor: false, estilo: 'cancelar' },
             { texto: textoSim, valor: true, estilo: 'primary' }
@@ -114,7 +114,7 @@ function modalConfirmacao(titulo, mensagem, textoSim = 'Sim, trocar', textoNao =
 }
 
 // ============================================================
-// BUSCA CANDIDATOS DO SUPABASE
+// BUSCA CANDIDATOS
 // ============================================================
 async function carregarCandidatos() {
     const url = `${supabaseUrl}/rest/v1/candidatos?select=*&ativo=eq.true&order=serie.asc,nome.asc`;
@@ -143,17 +143,11 @@ async function inicializar() {
         btnLogin.disabled = false;
     } catch (erro) {
         console.error('Erro ao carregar candidatos:', erro);
-        await modalAviso(
-            'Erro ao carregar',
-            'Não foi possível carregar os candidatos.<br>Verifique a conexão e recarregue a página.'
-        );
+        await modalAviso('Erro ao carregar', 'Não foi possível carregar os candidatos.<br>Verifique a conexão e recarregue a página.');
         btnLogin.innerHTML = "Erro ao carregar";
     }
 }
 
-// ============================================================
-// AUXILIAR
-// ============================================================
 function getFotoCandidato(nomeCand) {
     const cand = candidatosData.find(c => c.nome === nomeCand);
     return cand ? cand.foto : 'https://via.placeholder.com/90';
@@ -187,7 +181,6 @@ document.getElementById('form-login').addEventListener('submit', async function(
         const resposta = await fetch(url, {
             headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
         });
-        
         const dados = await resposta.json();
 
         if (dados && dados.length > 0) {
@@ -195,9 +188,7 @@ document.getElementById('form-login').addEventListener('submit', async function(
         } else {
             eleitorAtual.nome = nomeDigitado;
             eleitorAtual.email = emailDigitado;
-            
             document.querySelectorAll('.nome-exibicao').forEach(el => el.innerText = nomeDigitado);
-            
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('votacao-section').style.display = 'block';
         }
@@ -210,7 +201,7 @@ document.getElementById('form-login').addEventListener('submit', async function(
 });
 
 // ============================================================
-// RENDERIZAR CARTÕES DE VOTAÇÃO
+// RENDERIZAR CANDIDATOS
 // ============================================================
 function renderizarCandidatos() {
     const container = document.getElementById('secoes-votacao');
@@ -256,9 +247,7 @@ function renderizarCandidatos() {
 }
 
 // ============================================================
-// 🚫 BLOQUEIO: confirmação antes de trocar de candidato
-// Usa evento 'change' (mais confiável que 'click' em radios escondidos)
-// e reverte a seleção se o usuário recusar.
+// BLOQUEIO DE TROCA
 // ============================================================
 function aplicarBloqueioTrocaSelecao() {
     document.querySelectorAll('#secoes-votacao input[type="radio"]').forEach(radio => {
@@ -267,13 +256,11 @@ function aplicarBloqueioTrocaSelecao() {
             const valorNovo = this.value;
             const valorAnterior = selecoesConfirmadas[nomeGrupo];
 
-            // Primeira escolha nesta categoria (ou mesma escolha) → só registra
             if (!valorAnterior || valorAnterior === valorNovo) {
                 selecoesConfirmadas[nomeGrupo] = valorNovo;
                 return;
             }
 
-            // Já havia escolha diferente → pede confirmação
             const confirmou = await modalConfirmacao(
                 'Trocar de candidato?',
                 `Você já escolheu <strong>${valorAnterior}</strong> nesta categoria.<br><br>Deseja trocar por <strong>${valorNovo}</strong>?`,
@@ -284,7 +271,6 @@ function aplicarBloqueioTrocaSelecao() {
             if (confirmou) {
                 selecoesConfirmadas[nomeGrupo] = valorNovo;
             } else {
-                // Reverte: marca o radio anterior de volta
                 const radioAnterior = [...document.querySelectorAll(`input[name="${nomeGrupo}"]`)]
                     .find(el => el.value === valorAnterior);
                 if (radioAnterior) radioAnterior.checked = true;
@@ -294,7 +280,7 @@ function aplicarBloqueioTrocaSelecao() {
 }
 
 // ============================================================
-// CONTROLE DA BARRA E BOTÕES
+// NAVEGAÇÃO
 // ============================================================
 function atualizarInterfaceNavegacao() {
     const progresso = ((etapaAtual + 1) / ordemCargos.length) * 100;
@@ -302,7 +288,7 @@ function atualizarInterfaceNavegacao() {
     document.getElementById('progresso-texto').innerText = `Passo ${etapaAtual + 1} de ${ordemCargos.length}: ${ordemCargos[etapaAtual]}`;
 
     document.getElementById('btn-anterior').style.display = etapaAtual === 0 ? 'none' : 'flex';
-    
+
     if (etapaAtual === ordemCargos.length - 1) {
         document.getElementById('btn-proximo').style.display = 'none';
         document.getElementById('btn-revisar').style.display = 'flex';
@@ -312,18 +298,12 @@ function atualizarInterfaceNavegacao() {
     }
 }
 
-// ============================================================
-// BOTÃO PRÓXIMO
-// ============================================================
 document.getElementById('btn-proximo').addEventListener('click', async () => {
     const cargoAtual = ordemCargos[etapaAtual];
     const nameAttr = cargoAtual.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
 
     if (!document.querySelector(`input[name="${nameAttr}"]:checked`)) {
-        await modalAviso(
-            'Escolha um candidato',
-            `Você ainda não selecionou o seu voto para <strong>${cargoAtual}</strong>.<br><br>Escolha uma opção antes de avançar para a próxima categoria.`
-        );
+        await modalAviso('Escolha um candidato', `Você ainda não selecionou o seu voto para <strong>${cargoAtual}</strong>.<br><br>Escolha uma opção antes de avançar.`);
         return;
     }
 
@@ -331,12 +311,9 @@ document.getElementById('btn-proximo').addEventListener('click', async () => {
     etapaAtual++;
     document.getElementById(`etapa-${etapaAtual}`).style.display = 'block';
     atualizarInterfaceNavegacao();
-    window.scrollTo(0, 0); 
+    window.scrollTo(0, 0);
 });
 
-// ============================================================
-// BOTÃO ANTERIOR
-// ============================================================
 document.getElementById('btn-anterior').addEventListener('click', () => {
     document.getElementById(`etapa-${etapaAtual}`).style.display = 'none';
     etapaAtual--;
@@ -345,21 +322,15 @@ document.getElementById('btn-anterior').addEventListener('click', () => {
     window.scrollTo(0, 0);
 });
 
-// ============================================================
-// BOTÃO REVISAR
-// ============================================================
 document.getElementById('btn-revisar').addEventListener('click', async () => {
     const cargoAtual = ordemCargos[etapaAtual];
     const nameAttr = cargoAtual.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
 
     if (!document.querySelector(`input[name="${nameAttr}"]:checked`)) {
-        await modalAviso(
-            'Escolha um candidato',
-            `Você ainda não selecionou o seu voto para <strong>${cargoAtual}</strong>.<br><br>Escolha uma opção antes de revisar os votos.`
-        );
+        await modalAviso('Escolha um candidato', `Você ainda não selecionou o seu voto para <strong>${cargoAtual}</strong>.<br><br>Escolha uma opção antes de revisar.`);
         return;
     }
-    
+
     const votos = {
         personagem_feminino:  document.querySelector('input[name="personagem_feminino"]:checked').value,
         personagem_masculino: document.querySelector('input[name="personagem_masculino"]:checked').value,
@@ -367,15 +338,11 @@ document.getElementById('btn-revisar').addEventListener('click', async () => {
     };
 
     preencherListaResumo(votos);
-    
     document.getElementById('votacao-section').style.display = 'none';
     document.getElementById('resumo-section').style.display = 'block';
     window.scrollTo(0, 0);
 });
 
-// ============================================================
-// BOTÃO VOLTAR PARA EDIÇÃO
-// ============================================================
 document.getElementById('btn-voltar-edicao').addEventListener('click', () => {
     document.getElementById('resumo-section').style.display = 'none';
     document.getElementById('votacao-section').style.display = 'block';
@@ -412,19 +379,13 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
             document.getElementById('header-resumo').innerHTML = `<h2>Comprovante de Votação</h2><p>Votos enviados por <strong>${eleitorAtual.email}</strong>.</p>`;
             document.getElementById('mensagem-sucesso').style.display = 'block';
         } else {
-            await modalAviso(
-                'Voto já registado',
-                'Este e-mail já consta na base de dados.<br>Você não pode votar novamente.'
-            );
+            await modalAviso('Voto já registado', 'Este e-mail já consta na base de dados.<br>Você não pode votar novamente.');
             this.innerHTML = htmlOriginal;
             this.disabled = false;
             document.getElementById('btn-voltar-edicao').style.display = 'flex';
         }
     } catch (erro) {
-        await modalAviso(
-            'Erro de comunicação',
-            'Não foi possível enviar os seus votos.<br>Tente novamente em instantes.'
-        );
+        await modalAviso('Erro de comunicação', 'Não foi possível enviar os seus votos.<br>Tente novamente em instantes.');
         this.innerHTML = htmlOriginal;
         this.disabled = false;
         document.getElementById('btn-voltar-edicao').style.display = 'flex';
@@ -432,7 +393,7 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
 });
 
 // ============================================================
-// PREENCHER RESUMO
+// RESUMO
 // ============================================================
 function preencherListaResumo(votosDB) {
     const lista = document.getElementById('lista-resumo');
@@ -453,9 +414,6 @@ function preencherListaResumo(votosDB) {
     });
 }
 
-// ============================================================
-// MOSTRAR RECIBO PARA QUEM JÁ VOTOU
-// ============================================================
 function mostrarEcraRecibo(dadosDB) {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('resumo-section').style.display = 'block';
@@ -471,7 +429,4 @@ function mostrarEcraRecibo(dadosDB) {
     preencherListaResumo(dadosDB);
 }
 
-// ============================================================
-// 🚀 Start
-// ============================================================
 inicializar();

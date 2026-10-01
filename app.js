@@ -3,9 +3,7 @@
 // ============================================================
 (function initTema() {
     const temaSalvo = localStorage.getItem('tema');
-    if (temaSalvo === 'dark') {
-        document.body.classList.add('dark-mode');
-    }
+    if (temaSalvo === 'dark') document.body.classList.add('dark-mode');
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -33,7 +31,12 @@ const ordemCargos = ["Personagem Feminino", "Personagem Masculino", "Melhor Pet"
 let etapaAtual = 0;
 let carregando = true;
 
-const selecoesConfirmadas = {};
+// Escolhas: { categoria: { 1: "Nome1", 2: "Nome2", 3: "Nome3" } }
+const escolhas = {
+    personagem_feminino:  { 1: null, 2: null, 3: null },
+    personagem_masculino: { 1: null, 2: null, 3: null },
+    melhor_pet:           { 1: null, 2: null, 3: null }
+};
 
 // ============================================================
 // ÍCONES DO MODAL
@@ -44,16 +47,12 @@ const ICONES_MODAL = {
     erro: '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'
 };
 
-// ============================================================
-// MODAL CUSTOMIZADO
-// ============================================================
 const modalEl = document.getElementById('modal-custom');
 const modalIconWrapper = document.getElementById('modal-icon-wrapper');
 const modalIcon = document.getElementById('modal-icon');
 const modalTitulo = document.getElementById('modal-titulo');
 const modalMensagem = document.getElementById('modal-mensagem');
 const modalBotoes = document.getElementById('modal-botoes');
-
 let modalResolver = null;
 
 function abrirModal({ tipo = 'aviso', titulo, mensagem, botoes }) {
@@ -77,10 +76,7 @@ function abrirModal({ tipo = 'aviso', titulo, mensagem, botoes }) {
         modalEl.style.display = 'flex';
 
         const escHandler = (e) => {
-            if (e.key === 'Escape') {
-                fecharModal(null);
-                document.removeEventListener('keydown', escHandler);
-            }
+            if (e.key === 'Escape') { fecharModal(null); document.removeEventListener('keydown', escHandler); }
         };
         document.addEventListener('keydown', escHandler);
     });
@@ -88,29 +84,11 @@ function abrirModal({ tipo = 'aviso', titulo, mensagem, botoes }) {
 
 function fecharModal(valor) {
     modalEl.style.display = 'none';
-    if (modalResolver) {
-        modalResolver(valor);
-        modalResolver = null;
-    }
+    if (modalResolver) { modalResolver(valor); modalResolver = null; }
 }
 
 function modalAviso(titulo, mensagem) {
-    return abrirModal({
-        tipo: 'aviso',
-        titulo, mensagem,
-        botoes: [{ texto: 'Entendi', valor: true, estilo: 'primary' }]
-    });
-}
-
-function modalConfirmacao(titulo, mensagem, textoSim = 'Sim, trocar', textoNao = 'Não, manter') {
-    return abrirModal({
-        tipo: 'confirmacao',
-        titulo, mensagem,
-        botoes: [
-            { texto: textoNao, valor: false, estilo: 'cancelar' },
-            { texto: textoSim, valor: true, estilo: 'primary' }
-        ]
-    });
+    return abrirModal({ tipo: 'aviso', titulo, mensagem, botoes: [{ texto: 'Entendi', valor: true, estilo: 'primary' }] });
 }
 
 // ============================================================
@@ -159,7 +137,7 @@ function getFotoCandidato(nomeCand) {
 document.getElementById('form-login').addEventListener('submit', async function(e) {
     e.preventDefault();
     if (carregando) {
-        await modalAviso('Aguarde', 'Os candidatos ainda estão sendo carregados. Tente novamente em alguns segundos.');
+        await modalAviso('Aguarde', 'Os candidatos ainda estão sendo carregados.');
         return;
     }
 
@@ -178,9 +156,7 @@ document.getElementById('form-login').addEventListener('submit', async function(
 
     try {
         const url = `${supabaseUrl}/rest/v1/votos?email=eq.${encodeURIComponent(emailDigitado)}&select=*`;
-        const resposta = await fetch(url, {
-            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-        });
+        const resposta = await fetch(url, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } });
         const dados = await resposta.json();
 
         if (dados && dados.length > 0) {
@@ -193,7 +169,7 @@ document.getElementById('form-login').addEventListener('submit', async function(
             document.getElementById('votacao-section').style.display = 'block';
         }
     } catch (erro) {
-        await modalAviso('Erro de conexão', 'Não foi possível conectar ao servidor.<br>Tente novamente em instantes.');
+        await modalAviso('Erro de conexão', 'Não foi possível conectar ao servidor.');
     } finally {
         btnLogin.innerHTML = htmlOriginal;
         btnLogin.disabled = false;
@@ -201,7 +177,7 @@ document.getElementById('form-login').addEventListener('submit', async function(
 });
 
 // ============================================================
-// RENDERIZAR CANDIDATOS
+// RENDERIZAR CATEGORIAS E CANDIDATOS
 // ============================================================
 function renderizarCandidatos() {
     const container = document.getElementById('secoes-votacao');
@@ -214,26 +190,35 @@ function renderizarCandidatos() {
 
     let html = '';
     ordemCargos.forEach((cargo, index) => {
+        const key = chaveCategoria(cargo);
         html += `<div class="etapa-votacao" id="etapa-${index}" style="display: ${index === 0 ? 'block' : 'none'};">`;
         html += `
             <div class="cargo-header">
                 <h2>${cargo} Destaque</h2>
-                <p>Selecione <strong>apenas 1 candidato</strong> desta categoria.</p>
+                <p>Escolha os seus <strong>3 favoritos</strong> e classifique em 1º, 2º e 3º lugar.</p>
+            </div>
+            <div class="instrucao-escolha" data-cat="${key}">
+                <span>Classificados:</span>
+                <span class="contador" id="contador-${key}">0 / 3</span>
             </div>
         `;
         if (agrupado[cargo]) {
             for (const serie in agrupado[cargo]) {
                 html += `<h3>${serie}</h3><div class="grid-candidatos">`;
                 agrupado[cargo][serie].forEach(cand => {
-                    const nameAttr = cargo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
                     html += `
-                        <label>
-                            <input type="radio" name="${nameAttr}" value="${cand.nome}">
+                        <div class="candidato-item" data-nome="${cand.nome}" data-cat="${key}">
                             <div class="card-candidato">
+                                <div class="badge-pos" id="badge-${key}-${cand.id}"></div>
                                 <img src="${cand.foto}" alt="${cand.nome}" loading="lazy">
                                 <p>${cand.nome}</p>
                             </div>
-                        </label>
+                            <div class="card-posicoes">
+                                <button type="button" class="btn-posicao" data-pos="1" data-nome="${cand.nome}" data-cat="${key}">1º</button>
+                                <button type="button" class="btn-posicao" data-pos="2" data-nome="${cand.nome}" data-cat="${key}">2º</button>
+                                <button type="button" class="btn-posicao" data-pos="3" data-nome="${cand.nome}" data-cat="${key}">3º</button>
+                            </div>
+                        </div>
                     `;
                 });
                 html += `</div>`;
@@ -242,41 +227,104 @@ function renderizarCandidatos() {
         html += `</div>`;
     });
     container.innerHTML = html;
+
+    // Registra eventos dos botões
+    document.querySelectorAll('.btn-posicao').forEach(btn => {
+        btn.addEventListener('click', () => atribuirPosicao(btn.dataset.cat, btn.dataset.nome, parseInt(btn.dataset.pos)));
+    });
+
     atualizarInterfaceNavegacao();
-    aplicarBloqueioTrocaSelecao();
 }
 
 // ============================================================
-// BLOQUEIO DE TROCA
+// ATRIBUIR POSIÇÃO A UM CANDIDATO
 // ============================================================
-function aplicarBloqueioTrocaSelecao() {
-    document.querySelectorAll('#secoes-votacao input[type="radio"]').forEach(radio => {
-        radio.addEventListener('change', async function() {
-            const nomeGrupo = this.name;
-            const valorNovo = this.value;
-            const valorAnterior = selecoesConfirmadas[nomeGrupo];
+function atribuirPosicao(catKey, nomeCand, pos) {
+    const slots = escolhas[catKey];
 
-            if (!valorAnterior || valorAnterior === valorNovo) {
-                selecoesConfirmadas[nomeGrupo] = valorNovo;
-                return;
-            }
+    // Se o candidato já está em outra posição, limpa ela primeiro
+    for (const p of [1, 2, 3]) {
+        if (slots[p] === nomeCand && p !== pos) slots[p] = null;
+    }
 
-            const confirmou = await modalConfirmacao(
-                'Trocar de candidato?',
-                `Você já escolheu <strong>${valorAnterior}</strong> nesta categoria.<br><br>Deseja trocar por <strong>${valorNovo}</strong>?`,
-                'Sim, trocar',
-                'Não, manter'
-            );
+    // Se essa posição já tem outro candidato, ele será substituído
+    slots[pos] = nomeCand;
 
-            if (confirmou) {
-                selecoesConfirmadas[nomeGrupo] = valorNovo;
-            } else {
-                const radioAnterior = [...document.querySelectorAll(`input[name="${nomeGrupo}"]`)]
-                    .find(el => el.value === valorAnterior);
-                if (radioAnterior) radioAnterior.checked = true;
-            }
-        });
+    atualizarBadges();
+    atualizarContador();
+}
+
+// Remove o candidato de todas as posições da categoria
+function removerCandidato(catKey, nomeCand) {
+    const slots = escolhas[catKey];
+    for (const p of [1, 2, 3]) {
+        if (slots[p] === nomeCand) slots[p] = null;
+    }
+}
+
+// ============================================================
+// ATUALIZA BADGES E BOTÕES DE POSIÇÃO
+// ============================================================
+function atualizarBadges() {
+    // Limpa tudo
+    document.querySelectorAll('.badge-pos').forEach(el => el.innerHTML = '');
+    document.querySelectorAll('.card-candidato').forEach(el => el.classList.remove('tem-posicao'));
+    document.querySelectorAll('.btn-posicao').forEach(el => el.classList.remove('ativa'));
+
+    // Reaplica
+    ordemCargos.forEach(cargo => {
+        const catKey = chaveCategoria(cargo);
+        const slots = escolhas[catKey];
+
+        for (const pos of [1, 2, 3]) {
+            const nome = slots[pos];
+            if (!nome) continue;
+
+            // Encontra o item do candidato
+            const item = document.querySelector(`.candidato-item[data-cat="${catKey}"][data-nome="${CSS.escape(nome)}"]`);
+            if (!item) continue;
+
+            const card = item.querySelector('.card-candidato');
+            const badgeContainer = item.querySelector('.badge-pos');
+            card.classList.add('tem-posicao');
+
+            // Adiciona o badge
+            const badge = document.createElement('span');
+            badge.className = 'badge-item pos-' + pos;
+            badge.innerText = pos + 'º';
+            badgeContainer.appendChild(badge);
+
+            // Marca o botão correspondente como ativo
+            const btn = item.querySelector(`.btn-posicao[data-pos="${pos}"]`);
+            if (btn) btn.classList.add('ativa');
+        }
     });
+}
+
+// ============================================================
+// ATUALIZA CONTADOR DE CADA CATEGORIA
+// ============================================================
+function atualizarContador() {
+    ordemCargos.forEach(cargo => {
+        const catKey = chaveCategoria(cargo);
+        const slots = escolhas[catKey];
+        const preenchidos = [1, 2, 3].filter(p => slots[p] !== null).length;
+
+        const contador = document.getElementById(`contador-${catKey}`);
+        if (contador) contador.innerText = `${preenchidos} / 3`;
+
+        const aviso = document.querySelector(`.instrucao-escolha[data-cat="${catKey}"]`);
+        if (aviso) {
+            aviso.classList.toggle('completo', preenchidos === 3);
+        }
+    });
+}
+
+// ============================================================
+// AUXILIAR: nome da categoria → chave
+// ============================================================
+function chaveCategoria(cargo) {
+    return cargo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
 }
 
 // ============================================================
@@ -300,10 +348,15 @@ function atualizarInterfaceNavegacao() {
 
 document.getElementById('btn-proximo').addEventListener('click', async () => {
     const cargoAtual = ordemCargos[etapaAtual];
-    const nameAttr = cargoAtual.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+    const catKey = chaveCategoria(cargoAtual);
+    const slots = escolhas[catKey];
+    const preenchidos = [1, 2, 3].filter(p => slots[p] !== null).length;
 
-    if (!document.querySelector(`input[name="${nameAttr}"]:checked`)) {
-        await modalAviso('Escolha um candidato', `Você ainda não selecionou o seu voto para <strong>${cargoAtual}</strong>.<br><br>Escolha uma opção antes de avançar.`);
+    if (preenchidos < 3) {
+        await modalAviso(
+            'Complete as 3 posições',
+            `Na categoria <strong>${cargoAtual}</strong> você escolheu apenas ${preenchidos} de 3.<br><br>Selecione 1º, 2º e 3º lugar antes de avançar.`
+        );
         return;
     }
 
@@ -324,20 +377,19 @@ document.getElementById('btn-anterior').addEventListener('click', () => {
 
 document.getElementById('btn-revisar').addEventListener('click', async () => {
     const cargoAtual = ordemCargos[etapaAtual];
-    const nameAttr = cargoAtual.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+    const catKey = chaveCategoria(cargoAtual);
+    const slots = escolhas[catKey];
+    const preenchidos = [1, 2, 3].filter(p => slots[p] !== null).length;
 
-    if (!document.querySelector(`input[name="${nameAttr}"]:checked`)) {
-        await modalAviso('Escolha um candidato', `Você ainda não selecionou o seu voto para <strong>${cargoAtual}</strong>.<br><br>Escolha uma opção antes de revisar.`);
+    if (preenchidos < 3) {
+        await modalAviso(
+            'Complete as 3 posições',
+            `Na categoria <strong>${cargoAtual}</strong> você escolheu apenas ${preenchidos} de 3.<br><br>Complete antes de revisar.`
+        );
         return;
     }
 
-    const votos = {
-        personagem_feminino:  document.querySelector('input[name="personagem_feminino"]:checked').value,
-        personagem_masculino: document.querySelector('input[name="personagem_masculino"]:checked').value,
-        melhor_pet:           document.querySelector('input[name="melhor_pet"]:checked').value
-    };
-
-    preencherListaResumo(votos);
+    preencherListaResumo();
     document.getElementById('votacao-section').style.display = 'none';
     document.getElementById('resumo-section').style.display = 'block';
     window.scrollTo(0, 0);
@@ -353,10 +405,18 @@ document.getElementById('btn-voltar-edicao').addEventListener('click', () => {
 // ============================================================
 document.getElementById('btn-confirmar-final').addEventListener('click', async function() {
     const votosParaEnvio = {
-        personagem_feminino:  document.querySelector('input[name="personagem_feminino"]:checked').value,
-        personagem_masculino: document.querySelector('input[name="personagem_masculino"]:checked').value,
-        melhor_pet:           document.querySelector('input[name="melhor_pet"]:checked').value
+        nome_completo: eleitorAtual.nome,
+        email: eleitorAtual.email
     };
+
+    // Monta os campos dinamicamente
+    ordemCargos.forEach(cargo => {
+        const catKey = chaveCategoria(cargo);
+        const slots = escolhas[catKey];
+        votosParaEnvio[`${catKey}_1`] = slots[1];
+        votosParaEnvio[`${catKey}_2`] = slots[2];
+        votosParaEnvio[`${catKey}_3`] = slots[3];
+    });
 
     const htmlOriginal = this.innerHTML;
     this.innerHTML = "Enviando...";
@@ -367,11 +427,7 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
         const resposta = await fetch(`${supabaseUrl}/rest/v1/votos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Prefer': 'return=minimal' },
-            body: JSON.stringify({
-                nome_completo: eleitorAtual.nome,
-                email: eleitorAtual.email,
-                ...votosParaEnvio
-            })
+            body: JSON.stringify(votosParaEnvio)
         });
 
         if (resposta.ok) {
@@ -385,7 +441,7 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
             document.getElementById('btn-voltar-edicao').style.display = 'flex';
         }
     } catch (erro) {
-        await modalAviso('Erro de comunicação', 'Não foi possível enviar os seus votos.<br>Tente novamente em instantes.');
+        await modalAviso('Erro de comunicação', 'Não foi possível enviar os seus votos.');
         this.innerHTML = htmlOriginal;
         this.disabled = false;
         document.getElementById('btn-voltar-edicao').style.display = 'flex';
@@ -393,40 +449,74 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
 });
 
 // ============================================================
-// RESUMO
+// RESUMO — agora mostra 3 cards por categoria
 // ============================================================
 function preencherListaResumo(votosDB) {
     const lista = document.getElementById('lista-resumo');
     lista.innerHTML = '';
 
-    ordemCargos.forEach(cargo => {
-        const key = cargo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
-        const nomeVotado = votosDB[key];
-        const foto = getFotoCandidato(nomeVotado);
+    // Se for comprovante vindo do banco, adapta os dados
+    const dados = votosDB || null;
 
-        lista.innerHTML += `
-            <div class="resumo-card">
-                <span class="cargo-label">${cargo}</span>
-                <img src="${foto}" alt="${nomeVotado}">
-                <span class="nome-label">${nomeVotado}</span>
-            </div>
+    ordemCargos.forEach(cargo => {
+        const catKey = chaveCategoria(cargo);
+
+        let slots;
+        if (dados) {
+            slots = {
+                1: dados[`${catKey}_1`],
+                2: dados[`${catKey}_2`],
+                3: dados[`${catKey}_3`]
+            };
+        } else {
+            slots = escolhas[catKey];
+        }
+
+        let html = `
+            <div class="resumo-categoria">
+                <h3 class="resumo-cat-titulo">${cargo}</h3>
+                <div class="resumo-linha">
         `;
+
+        for (const pos of [1, 2, 3]) {
+            const nome = slots[pos];
+            const foto = nome ? getFotoCandidato(nome) : 'https://via.placeholder.com/90';
+            const medalha = pos === 1 ? '🥇' : pos === 2 ? '🥈' : '🥉';
+            const classePos = pos === 1 ? 'pos-1' : pos === 2 ? 'pos-2' : 'pos-3';
+
+            html += `
+                <div class="resumo-card posicao-${classePos}">
+                    <span class="cargo-label posicao-label">${pos}º lugar</span>
+                    <img src="${foto}" alt="${nome || 'Não escolhido'}">
+                    <span class="nome-label">${nome || '—'}</span>
+                </div>
+            `;
+        }
+
+        html += `</div></div>`;
+        lista.innerHTML += html;
     });
 }
 
+// ============================================================
+// MOSTRAR RECIBO PARA QUEM JÁ VOTOU
+// ============================================================
 function mostrarEcraRecibo(dadosDB) {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('resumo-section').style.display = 'block';
-    
+
     document.getElementById('header-resumo').innerHTML = `
         <h2 style="color: #1a7f37;">Voto Já Registrado!</h2>
         <p>Identificamos que <strong>${dadosDB.nome_completo}</strong> (${dadosDB.email}) já participou da votação. Abaixo estão as suas escolhas:</p>
     `;
-    
+
     document.getElementById('botoes-resumo').style.display = 'none';
     document.getElementById('mensagem-sucesso').style.display = 'none';
 
     preencherListaResumo(dadosDB);
 }
 
+// ============================================================
+// 🚀 Start
+// ============================================================
 inicializar();

@@ -210,9 +210,29 @@ function renderizarCandidatos() {
                 <span>Classificados:</span>
                 <span class="contador" id="contador-${key}">0 / 3</span>
             </div>
+
+            <!-- 🔍 Barra de busca -->
+            <div class="busca-wrapper">
+                <svg class="busca-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.3-4.3"/>
+                </svg>
+                <input type="text" class="busca-candidato" data-cat="${key}"
+                       placeholder="Buscar candidato ou série..." autocomplete="off">
+                <button type="button" class="busca-limpar" data-cat="${key}" aria-label="Limpar busca">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
         `;
+
         if (agrupado[cargo]) {
             for (const serie in agrupado[cargo]) {
+                html += `<div class="serie-grupo" data-serie="${serie}">`;
                 html += `<h3>${serie}</h3><div class="grid-candidatos">`;
                 agrupado[cargo][serie].forEach(cand => {
                     html += `
@@ -225,18 +245,49 @@ function renderizarCandidatos() {
                         </div>
                     `;
                 });
-                html += `</div>`;
+                html += `</div></div>`;
             }
         }
+
+        html += `<div class="busca-sem-resultado" data-cat="${key}">
+            Nenhum candidato encontrado. Tente outro termo.
+        </div>`;
+
         html += `</div>`;
     });
     container.innerHTML = html;
 
-    // Registra o clique em cada card (o candidato-item é o alvo para pegar cliques
-    // tanto no card quanto na badge)
+    // Registra o clique em cada card
     document.querySelectorAll('.candidato-item').forEach(item => {
         item.addEventListener('click', () => {
             toggleCandidato(item.dataset.cat, item.dataset.nome);
+        });
+    });
+
+    // 🔍 Listener da busca
+    document.querySelectorAll('.busca-candidato').forEach(input => {
+        input.addEventListener('input', (e) => {
+            const catKey = e.target.dataset.cat;
+            filtrarCandidatos(catKey, e.target.value);
+            const btnLimpar = document.querySelector(`.busca-limpar[data-cat="${catKey}"]`);
+            if (btnLimpar) btnLimpar.classList.toggle('visivel', e.target.value.length > 0);
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') e.preventDefault();
+        });
+    });
+
+    // Listener do botão limpar
+    document.querySelectorAll('.busca-limpar').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const catKey = btn.dataset.cat;
+            const input = document.querySelector(`.busca-candidato[data-cat="${catKey}"]`);
+            if (input) {
+                input.value = '';
+                filtrarCandidatos(catKey, '');
+                input.focus();
+            }
+            btn.classList.remove('visivel');
         });
     });
 
@@ -244,20 +295,61 @@ function renderizarCandidatos() {
 }
 
 // ============================================================
+// 🔍 BUSCA DE CANDIDATOS
+// ============================================================
+function normalizarBusca(txt) {
+    return (txt || '').toString().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+function filtrarCandidatos(catKey, termo) {
+    const termoNorm = normalizarBusca(termo);
+    const etapa = document.querySelector(`.candidato-item[data-cat="${catKey}"]`)?.closest('.etapa-votacao');
+    if (!etapa) return;
+
+    const slots = escolhas[catKey] || {};
+    const itens = etapa.querySelectorAll(`.candidato-item[data-cat="${catKey}"]`);
+
+    itens.forEach(item => {
+        const nome = item.dataset.nome;
+        const nomeNorm = normalizarBusca(nome);
+        const serieNorm = normalizarBusca(item.closest('.serie-grupo')?.dataset.serie || '');
+        const selecionado = [1, 2, 3].some(p => slots[p] === nome);
+
+        // Mostra se: sem busca, OU bate no nome, OU bate na série, OU já está selecionado
+        const match = !termoNorm
+            || nomeNorm.includes(termoNorm)
+            || serieNorm.includes(termoNorm)
+            || selecionado;
+
+        item.classList.toggle('oculto', !match);
+    });
+
+    // Esconde grupos de séries que ficaram sem candidatos visíveis
+    etapa.querySelectorAll('.serie-grupo').forEach(grupo => {
+        const visiveis = grupo.querySelectorAll('.candidato-item:not(.oculto)').length;
+        grupo.classList.toggle('oculto', visiveis === 0);
+    });
+
+    // Mensagem "sem resultado"
+    const semResultado = etapa.querySelector(`.busca-sem-resultado[data-cat="${catKey}"]`);
+    if (semResultado) {
+        const totalVisiveis = etapa.querySelectorAll('.candidato-item:not(.oculto)').length;
+        semResultado.classList.toggle('visivel', totalVisiveis === 0 && termoNorm.length > 0);
+    }
+}
+
+// ============================================================
 // 🎯 TOGGLE DE CANDIDATO
-// Se não está selecionado → adiciona na próxima vaga (1, 2 ou 3)
-// Se já está selecionado → remove e reorganiza as posições
 // ============================================================
 function toggleCandidato(catKey, nomeCand) {
     const slots = escolhas[catKey];
     const posAtual = [1, 2, 3].find(p => slots[p] === nomeCand);
 
     if (posAtual) {
-        // REMOVER: limpa a posição e reorganiza (2º vira 1º, 3º vira 2º)
         slots[posAtual] = null;
         reorganizarSlots(catKey);
     } else {
-        // ADICIONAR: pega a próxima vaga livre
         const proximaVaga = [1, 2, 3].find(p => slots[p] === null);
         if (!proximaVaga) {
             modalAviso(
@@ -271,9 +363,14 @@ function toggleCandidato(catKey, nomeCand) {
 
     atualizarBadges();
     atualizarContador();
+
+    // Se há uma busca ativa, refiltra para atualizar a visibilidade dos selecionados
+    const inputBusca = document.querySelector(`.busca-candidato[data-cat="${catKey}"]`);
+    if (inputBusca && inputBusca.value.trim().length > 0) {
+        filtrarCandidatos(catKey, inputBusca.value);
+    }
 }
 
-// Reorganiza as posições, movendo os selecionados para as primeiras vagas
 function reorganizarSlots(catKey) {
     const slots = escolhas[catKey];
     const selecionados = [1, 2, 3].map(p => slots[p]).filter(n => n !== null);

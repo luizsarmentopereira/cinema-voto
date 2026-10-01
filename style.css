@@ -489,7 +489,6 @@ button:hover .btn-icon { transform: scale(1.08); }
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 22px;
     margin-bottom: 16px;
-    /* espaço para a badge sair por cima da borda */
     padding-top: 4px;
 }
 
@@ -498,7 +497,6 @@ button:hover .btn-icon { transform: scale(1.08); }
     flex-direction: column;
     height: 100%;
     position: relative;
-    /* 🔑 espaço reservado acima do card para a badge aparecer inteira */
     padding-top: 22px;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -587,7 +585,6 @@ body.dark-mode .card-candidato {
     letter-spacing: -0.01em;
 }
 
-/* Card selecionado */
 .card-candidato.tem-posicao {
     border-color: var(--gold-color);
     background:
@@ -599,7 +596,7 @@ body.dark-mode .card-candidato {
 }
 
 /* ============================================================
-   🏅 BADGE DE POSIÇÃO — fora do card, sem ser cortada
+   🏅 BADGE DE POSIÇÃO
    ============================================================ */
 .badge-pos {
     position: absolute;
@@ -609,7 +606,6 @@ body.dark-mode .card-candidato {
     display: flex;
     gap: 6px;
     z-index: 10;
-    /* a badge não intercepta o clique — quem trata é o candidato-item */
     pointer-events: none;
 }
 
@@ -1484,4 +1480,123 @@ tr:last-child td { border-bottom: none; }
     .resumo-linha { grid-template-columns: 1fr; }
     .insight-card .valor { font-size: 22px; }
     .theme-toggle { top: 12px; right: 12px; width: 42px; height: 42px; }
+}
+
+/* ============================================================
+   🔍 BARRA DE BUSCA DE CANDIDATOS
+   ============================================================ */
+.serie-grupo.oculto { display: none; }
+
+.busca-wrapper {
+    position: relative;
+    margin: 0 auto 28px;
+    max-width: 480px;
+    width: 100%;
+}
+
+.busca-wrapper .busca-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: color 0.2s ease;
+    z-index: 2;
+}
+
+.busca-wrapper:focus-within .busca-icon { color: var(--gold-color); }
+
+.busca-wrapper input.busca-candidato {
+    width: 100%;
+    padding: 14px 48px 14px 48px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    font-size: 15px;
+    font-family: inherit;
+    font-weight: 500;
+    color: var(--text-dark);
+    background: var(--input-bg);
+    transition: var(--transition-fast);
+    margin: 0;
+}
+
+.busca-wrapper input.busca-candidato:focus {
+    outline: none;
+    border-color: var(--gold-color);
+    background: var(--input-bg-focus);
+    box-shadow:
+        0 0 0 4px rgba(201,153,42,0.15),
+        var(--shadow-sm);
+}
+
+.busca-wrapper input.busca-candidato::placeholder {
+    color: var(--text-muted);
+    opacity: 0.65;
+    font-weight: 400;
+}
+
+/* Botão limpar (X) */
+.busca-limpar {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+    transition: var(--transition-fast);
+    z-index: 2;
+}
+
+.busca-limpar.visivel { display: inline-flex; }
+.busca-limpar::before { display: none; }
+.busca-limpar svg { width: 16px; height: 16px; }
+
+.busca-limpar:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    transform: translateY(-50%) scale(1.08);
+    box-shadow: none;
+}
+
+.busca-limpar:active { transform: translateY(-50%) scale(0.95); }
+
+/* Mensagem "sem resultado" */
+.busca-sem-resultado {
+    display: none;
+    text-align: center;
+    padding: 36px 20px;
+    color: var(--text-muted);
+    font-size: 15px;
+    font-style: italic;
+    letter-spacing: 0.01em;
+    background: linear-gradient(135deg, rgba(201,153,42,0.06), rgba(201,153,42,0.02));
+    border: 1.5px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    margin-top: 10px;
+}
+
+.busca-sem-resultado.visivel { display: block; }
+
+/* Ajuste no mobile */
+@media (max-width: 640px) {
+    .busca-wrapper { max-width: 100%; }
+    .busca-wrapper input.busca-candidato {
+        font-size: 14px;
+        padding: 12px 42px 12px 42px;
+    }
 }

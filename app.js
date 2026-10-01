@@ -31,7 +31,7 @@ const ordemCargos = ["Personagem Feminino", "Personagem Masculino", "Melhor Pet"
 let etapaAtual = 0;
 let carregando = true;
 
-// Escolhas: { categoria: { 1: "Nome1", 2: "Nome2", 3: "Nome3" } }
+// Escolhas por categoria: { 1: "Nome1", 2: "Nome2", 3: "Nome3" }
 const escolhas = {
     personagem_feminino:  { 1: null, 2: null, 3: null },
     personagem_masculino: { 1: null, 2: null, 3: null },
@@ -88,7 +88,10 @@ function fecharModal(valor) {
 }
 
 function modalAviso(titulo, mensagem) {
-    return abrirModal({ tipo: 'aviso', titulo, mensagem, botoes: [{ texto: 'Entendi', valor: true, estilo: 'primary' }] });
+    return abrirModal({
+        tipo: 'aviso', titulo, mensagem,
+        botoes: [{ texto: 'Entendi', valor: true, estilo: 'primary' }]
+    });
 }
 
 // ============================================================
@@ -131,13 +134,17 @@ function getFotoCandidato(nomeCand) {
     return cand ? cand.foto : 'https://via.placeholder.com/90';
 }
 
+function chaveCategoria(cargo) {
+    return cargo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+}
+
 // ============================================================
 // LOGIN
 // ============================================================
 document.getElementById('form-login').addEventListener('submit', async function(e) {
     e.preventDefault();
     if (carregando) {
-        await modalAviso('Aguarde', 'Os candidatos ainda estão sendo carregados.');
+        await modalAviso('Aguarde', 'Os candidatos ainda estão sendo carregados. Tente novamente em alguns segundos.');
         return;
     }
 
@@ -156,7 +163,9 @@ document.getElementById('form-login').addEventListener('submit', async function(
 
     try {
         const url = `${supabaseUrl}/rest/v1/votos?email=eq.${encodeURIComponent(emailDigitado)}&select=*`;
-        const resposta = await fetch(url, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } });
+        const resposta = await fetch(url, {
+            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+        });
         const dados = await resposta.json();
 
         if (dados && dados.length > 0) {
@@ -169,7 +178,7 @@ document.getElementById('form-login').addEventListener('submit', async function(
             document.getElementById('votacao-section').style.display = 'block';
         }
     } catch (erro) {
-        await modalAviso('Erro de conexão', 'Não foi possível conectar ao servidor.');
+        await modalAviso('Erro de conexão', 'Não foi possível conectar ao servidor.<br>Tente novamente em instantes.');
     } finally {
         btnLogin.innerHTML = htmlOriginal;
         btnLogin.disabled = false;
@@ -177,7 +186,7 @@ document.getElementById('form-login').addEventListener('submit', async function(
 });
 
 // ============================================================
-// RENDERIZAR CATEGORIAS E CANDIDATOS
+// RENDERIZAR CANDIDATOS
 // ============================================================
 function renderizarCandidatos() {
     const container = document.getElementById('secoes-votacao');
@@ -195,7 +204,7 @@ function renderizarCandidatos() {
         html += `
             <div class="cargo-header">
                 <h2>${cargo} Destaque</h2>
-                <p>Escolha os seus <strong>3 favoritos</strong> e classifique em 1º, 2º e 3º lugar.</p>
+                <p>Clique nos seus <strong>3 favoritos</strong>. O primeiro clique será o 1º lugar, depois 2º e 3º.</p>
             </div>
             <div class="instrucao-escolha" data-cat="${key}">
                 <span>Classificados:</span>
@@ -208,15 +217,10 @@ function renderizarCandidatos() {
                 agrupado[cargo][serie].forEach(cand => {
                     html += `
                         <div class="candidato-item" data-nome="${cand.nome}" data-cat="${key}">
+                            <div class="badge-pos"></div>
                             <div class="card-candidato">
-                                <div class="badge-pos" id="badge-${key}-${cand.id}"></div>
                                 <img src="${cand.foto}" alt="${cand.nome}" loading="lazy">
                                 <p>${cand.nome}</p>
-                            </div>
-                            <div class="card-posicoes">
-                                <button type="button" class="btn-posicao" data-pos="1" data-nome="${cand.nome}" data-cat="${key}">1º</button>
-                                <button type="button" class="btn-posicao" data-pos="2" data-nome="${cand.nome}" data-cat="${key}">2º</button>
-                                <button type="button" class="btn-posicao" data-pos="3" data-nome="${cand.nome}" data-cat="${key}">3º</button>
                             </div>
                         </div>
                     `;
@@ -228,50 +232,63 @@ function renderizarCandidatos() {
     });
     container.innerHTML = html;
 
-    // Registra eventos dos botões
-    document.querySelectorAll('.btn-posicao').forEach(btn => {
-        btn.addEventListener('click', () => atribuirPosicao(btn.dataset.cat, btn.dataset.nome, parseInt(btn.dataset.pos)));
+    // Registra o clique em cada card (o candidato-item é o alvo para pegar cliques
+    // tanto no card quanto na badge)
+    document.querySelectorAll('.candidato-item').forEach(item => {
+        item.addEventListener('click', () => {
+            toggleCandidato(item.dataset.cat, item.dataset.nome);
+        });
     });
 
     atualizarInterfaceNavegacao();
 }
 
 // ============================================================
-// ATRIBUIR POSIÇÃO A UM CANDIDATO
+// 🎯 TOGGLE DE CANDIDATO
+// Se não está selecionado → adiciona na próxima vaga (1, 2 ou 3)
+// Se já está selecionado → remove e reorganiza as posições
 // ============================================================
-function atribuirPosicao(catKey, nomeCand, pos) {
+function toggleCandidato(catKey, nomeCand) {
     const slots = escolhas[catKey];
+    const posAtual = [1, 2, 3].find(p => slots[p] === nomeCand);
 
-    // Se o candidato já está em outra posição, limpa ela primeiro
-    for (const p of [1, 2, 3]) {
-        if (slots[p] === nomeCand && p !== pos) slots[p] = null;
+    if (posAtual) {
+        // REMOVER: limpa a posição e reorganiza (2º vira 1º, 3º vira 2º)
+        slots[posAtual] = null;
+        reorganizarSlots(catKey);
+    } else {
+        // ADICIONAR: pega a próxima vaga livre
+        const proximaVaga = [1, 2, 3].find(p => slots[p] === null);
+        if (!proximaVaga) {
+            modalAviso(
+                'Limite atingido',
+                `Você já escolheu <strong>3 candidatos</strong> nesta categoria.<br><br>Clique em um deles para removê-lo antes de escolher outro.`
+            );
+            return;
+        }
+        slots[proximaVaga] = nomeCand;
     }
-
-    // Se essa posição já tem outro candidato, ele será substituído
-    slots[pos] = nomeCand;
 
     atualizarBadges();
     atualizarContador();
 }
 
-// Remove o candidato de todas as posições da categoria
-function removerCandidato(catKey, nomeCand) {
+// Reorganiza as posições, movendo os selecionados para as primeiras vagas
+function reorganizarSlots(catKey) {
     const slots = escolhas[catKey];
-    for (const p of [1, 2, 3]) {
-        if (slots[p] === nomeCand) slots[p] = null;
+    const selecionados = [1, 2, 3].map(p => slots[p]).filter(n => n !== null);
+    for (let i = 0; i < 3; i++) {
+        slots[i + 1] = selecionados[i] || null;
     }
 }
 
 // ============================================================
-// ATUALIZA BADGES E BOTÕES DE POSIÇÃO
+// ATUALIZA BADGES E ESTADOS VISUAIS DOS CARDS
 // ============================================================
 function atualizarBadges() {
-    // Limpa tudo
     document.querySelectorAll('.badge-pos').forEach(el => el.innerHTML = '');
     document.querySelectorAll('.card-candidato').forEach(el => el.classList.remove('tem-posicao'));
-    document.querySelectorAll('.btn-posicao').forEach(el => el.classList.remove('ativa'));
 
-    // Reaplica
     ordemCargos.forEach(cargo => {
         const catKey = chaveCategoria(cargo);
         const slots = escolhas[catKey];
@@ -280,7 +297,6 @@ function atualizarBadges() {
             const nome = slots[pos];
             if (!nome) continue;
 
-            // Encontra o item do candidato
             const item = document.querySelector(`.candidato-item[data-cat="${catKey}"][data-nome="${CSS.escape(nome)}"]`);
             if (!item) continue;
 
@@ -288,15 +304,10 @@ function atualizarBadges() {
             const badgeContainer = item.querySelector('.badge-pos');
             card.classList.add('tem-posicao');
 
-            // Adiciona o badge
             const badge = document.createElement('span');
             badge.className = 'badge-item pos-' + pos;
             badge.innerText = pos + 'º';
             badgeContainer.appendChild(badge);
-
-            // Marca o botão correspondente como ativo
-            const btn = item.querySelector(`.btn-posicao[data-pos="${pos}"]`);
-            if (btn) btn.classList.add('ativa');
         }
     });
 }
@@ -314,17 +325,8 @@ function atualizarContador() {
         if (contador) contador.innerText = `${preenchidos} / 3`;
 
         const aviso = document.querySelector(`.instrucao-escolha[data-cat="${catKey}"]`);
-        if (aviso) {
-            aviso.classList.toggle('completo', preenchidos === 3);
-        }
+        if (aviso) aviso.classList.toggle('completo', preenchidos === 3);
     });
-}
-
-// ============================================================
-// AUXILIAR: nome da categoria → chave
-// ============================================================
-function chaveCategoria(cargo) {
-    return cargo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
 }
 
 // ============================================================
@@ -355,7 +357,7 @@ document.getElementById('btn-proximo').addEventListener('click', async () => {
     if (preenchidos < 3) {
         await modalAviso(
             'Complete as 3 posições',
-            `Na categoria <strong>${cargoAtual}</strong> você escolheu apenas ${preenchidos} de 3.<br><br>Selecione 1º, 2º e 3º lugar antes de avançar.`
+            `Na categoria <strong>${cargoAtual}</strong> você escolheu apenas ${preenchidos} de 3.<br><br>Escolha mais ${3 - preenchidos} candidato(s) antes de avançar.`
         );
         return;
     }
@@ -409,7 +411,6 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
         email: eleitorAtual.email
     };
 
-    // Monta os campos dinamicamente
     ordemCargos.forEach(cargo => {
         const catKey = chaveCategoria(cargo);
         const slots = escolhas[catKey];
@@ -441,7 +442,7 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
             document.getElementById('btn-voltar-edicao').style.display = 'flex';
         }
     } catch (erro) {
-        await modalAviso('Erro de comunicação', 'Não foi possível enviar os seus votos.');
+        await modalAviso('Erro de comunicação', 'Não foi possível enviar os seus votos.<br>Tente novamente em instantes.');
         this.innerHTML = htmlOriginal;
         this.disabled = false;
         document.getElementById('btn-voltar-edicao').style.display = 'flex';
@@ -449,13 +450,12 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
 });
 
 // ============================================================
-// RESUMO — agora mostra 3 cards por categoria
+// RESUMO
 // ============================================================
 function preencherListaResumo(votosDB) {
     const lista = document.getElementById('lista-resumo');
     lista.innerHTML = '';
 
-    // Se for comprovante vindo do banco, adapta os dados
     const dados = votosDB || null;
 
     ordemCargos.forEach(cargo => {
@@ -481,7 +481,6 @@ function preencherListaResumo(votosDB) {
         for (const pos of [1, 2, 3]) {
             const nome = slots[pos];
             const foto = nome ? getFotoCandidato(nome) : 'https://via.placeholder.com/90';
-            const medalha = pos === 1 ? '🥇' : pos === 2 ? '🥈' : '🥉';
             const classePos = pos === 1 ? 'pos-1' : pos === 2 ? 'pos-2' : 'pos-3';
 
             html += `

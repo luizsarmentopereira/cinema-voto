@@ -267,25 +267,6 @@ Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ---
 
-## 👤 Autor
-
-Desenvolvido com 💛 para a **Premiação Melhores das Séries 2026**.
-
-- **Nome**: Seu Nome
-- **GitHub**: [@seu-usuario](https://github.com/seu-usuario)
-- **Contato**: seu@email.com
-
----
-
-## 🙏 Agradecimentos
-
-- [Supabase](https://supabase.com/) pelo backend gratuito e poderoso
-- [Chart.js](https://www.chartjs.org/) pelos gráficos elegantes
-- [Google Fonts](https://fonts.google.com/) pelas fontes Cinzel e Inter
-- Todos os fãs que participaram da votação 🎬
-
----
-
 <p align="center">
   Feito com 🎬 e ☕ para celebrar as melhores séries da TV
 </p>

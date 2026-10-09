@@ -229,7 +229,7 @@ O projeto utiliza um **tema cinematográfico premium** inspirado em cerimônias 
 
 ### GitHub Pages (grátis)
 1. Settings → Pages → Source: `main` branch → `/root`
-2. Acesso em: `https://seu-usuario.github.io/melhores-das-series/`
+2. Acesso em: `https://luizsarmentopereira.github.io/cinema-voto/`
 
 ### Vercel / Netlify (grátis)
 1. Conectar o repositório

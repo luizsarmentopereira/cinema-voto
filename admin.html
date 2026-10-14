@@ -53,6 +53,114 @@
         .btn-excluir:hover { background-color: #c53030; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(229, 62, 62, 0.3); }
 
         .inline-icon { width: 1.15em; height: 1.15em; flex-shrink: 0; vertical-align: middle; }
+
+        /* ============================================================
+           🖼️ RANKING COM FOTO
+           ============================================================ */
+        .ranking-lista { list-style: none; padding: 0; margin: 0; }
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            transition: background-color 0.2s ease;
+        }
+        .ranking-item:not(.primeiro):hover { background: var(--table-row-hover); }
+        .ranking-item.primeiro {
+            background: linear-gradient(135deg, rgba(232,185,59,0.18), rgba(232,185,59,0.08));
+            border: 1.5px solid var(--gold-color);
+            padding: 12px;
+            box-shadow: 0 4px 14px -6px rgba(201,153,42,0.4);
+        }
+        .ranking-item:not(.primeiro) {
+            border-bottom: 1px solid var(--border-color);
+        }
+        .ranking-item:last-child { border-bottom: none; }
+
+        .ranking-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .ranking-pos {
+            font-family: 'Cinzel', serif;
+            font-weight: 800;
+            font-size: 14px;
+            color: var(--text-muted);
+            min-width: 28px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .ranking-item.primeiro .ranking-pos {
+            color: var(--gold-deep);
+            font-size: 15px;
+        }
+
+        .ranking-foto {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            box-shadow:
+                0 2px 6px rgba(31,19,9,0.15),
+                0 0 0 2px var(--card-bg),
+                0 0 0 3px var(--border-color);
+            background: var(--input-bg);
+        }
+        .ranking-item.primeiro .ranking-foto {
+            width: 52px;
+            height: 52px;
+            box-shadow:
+                0 4px 12px -2px rgba(201,153,42,0.5),
+                0 0 0 2px var(--card-bg),
+                0 0 0 4px var(--gold-color);
+        }
+
+        .ranking-nome {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .ranking-item.primeiro .ranking-nome {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .ranking-pts {
+            font-family: 'Cinzel', serif;
+            font-weight: 800;
+            font-size: 14px;
+            color: var(--primary-color);
+            flex-shrink: 0;
+            padding: 4px 10px;
+            background: var(--primary-light);
+            border-radius: var(--radius-pill);
+        }
+        .ranking-item.primeiro .ranking-pts {
+            background: linear-gradient(135deg, var(--gold-bright), var(--gold-color));
+            color: #3A2700;
+            font-size: 15px;
+            box-shadow: 0 2px 6px -1px rgba(201,153,42,0.5);
+        }
+
+        @media (max-width: 520px) {
+            .ranking-foto { width: 34px; height: 34px; }
+            .ranking-item.primeiro .ranking-foto { width: 42px; height: 42px; }
+            .ranking-nome { font-size: 13px; }
+            .ranking-item.primeiro .ranking-nome { font-size: 14px; }
+            .ranking-pts { font-size: 12px; padding: 3px 8px; }
+        }
     </style>
 </head>
 <body>
@@ -310,6 +418,7 @@
     // Estado global
     let candidatosData = [];
     let mapaSetores = {};
+    let mapaFotos = {};       // 🖼️ nome do candidato → URL da foto
     let SERIES_LISTA = [];
 
     const ICON = {
@@ -327,7 +436,11 @@
         if (!resposta.ok) throw new Error("Falha ao buscar candidatos");
         candidatosData = await resposta.json();
         mapaSetores = {};
-        candidatosData.forEach(c => mapaSetores[c.nome] = c.serie);
+        mapaFotos = {};
+        candidatosData.forEach(c => {
+            mapaSetores[c.nome] = c.serie;
+            mapaFotos[c.nome] = c.foto;   // 🖼️
+        });
         SERIES_LISTA = [...new Set(candidatosData.map(c => c.serie))].sort();
     }
 
@@ -477,7 +590,7 @@
     }
 
     // ============================================================
-    // RANKING — com peso por posição (1º=3, 2º=2, 3º=1)
+    // RANKING — com peso por posição (1º=3, 2º=2, 3º=1) + FOTO
     // ============================================================
     function renderizarListasCandidatos(votos) {
         const container = document.getElementById('container-ranking-candidatos');
@@ -502,22 +615,27 @@
 
             let html = `<div class="chart-box"><h3>${cat.titulo}</h3>`;
             if (ranking.length === 0) {
-                html += `<p style="color: #999; text-align: center;">Nenhum voto.</p>`;
+                html += `<p style="color: var(--text-muted); text-align: center; font-style: italic;">Nenhum voto registado.</p>`;
             } else {
-                html += `<ul style="list-style: none; padding: 0;">`;
+                html += `<ul class="ranking-lista">`;
                 ranking.forEach((cand, i) => {
                     const isPrimeiro = i === 0;
-                    const estilo = isPrimeiro
-                        ? 'font-weight: bold; font-size: 16px; color: var(--text-dark); background: var(--gold-light); padding: 8px; border-radius: 4px;'
-                        : 'font-size: 14px; color: var(--text-muted); padding: 4px 8px; border-bottom: 1px solid #eee;';
-                    const prefixo = isPrimeiro ? `${ICON.trophy} ` : `${i + 1}º - `;
-                    html += `<li style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 5px; ${estilo}">
-                        <span style="display:flex; align-items:center; gap:6px;">${prefixo}${cand.nome}</span>
-                        <span><strong>${cand.pts}</strong> pts</span>
-                    </li>`;
+                    const foto = mapaFotos[cand.nome] || 'https://via.placeholder.com/80';
+                    const prefixo = isPrimeiro ? ICON.trophy : `${i + 1}º`;
+
+                    html += `
+                        <li class="ranking-item ${isPrimeiro ? 'primeiro' : ''}">
+                            <div class="ranking-info">
+                                <span class="ranking-pos">${prefixo}</span>
+                                <img src="${foto}" alt="${cand.nome}" class="ranking-foto" loading="lazy">
+                                <span class="ranking-nome">${cand.nome}</span>
+                            </div>
+                            <span class="ranking-pts">${cand.pts} pts</span>
+                        </li>
+                    `;
                 });
                 html += `</ul>`;
-                html += `<p style="margin-top: 12px; font-size: 12px; color: var(--text-muted); text-align: center;">1º = 3 pts · 2º = 2 pts · 3º = 1 pt</p>`;
+                html += `<p style="margin-top: 14px; font-size: 12px; color: var(--text-muted); text-align: center;">1º = 3 pts · 2º = 2 pts · 3º = 1 pt</p>`;
             }
             html += `</div>`;
             container.innerHTML += html;

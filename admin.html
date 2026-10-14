@@ -161,6 +161,90 @@
             .ranking-item.primeiro .ranking-nome { font-size: 14px; }
             .ranking-pts { font-size: 12px; padding: 3px 8px; }
         }
+
+        /* ============================================================
+           👁️ CAMPO DE SENHA COM BOTÃO "VER SENHA"
+           ============================================================ */
+        .senha-wrapper {
+            position: relative;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .senha-wrapper input {
+            width: 100%;
+            padding: 14px 48px 14px 16px !important;
+            border: 1.5px solid var(--border-color) !important;
+            border-radius: var(--radius-md) !important;
+            font-size: 16px !important;
+            font-family: inherit;
+            background-color: var(--input-bg) !important;
+            color: var(--text-dark) !important;
+            transition: var(--transition);
+            margin: 0 !important;
+        }
+
+        .senha-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary-color) !important;
+            background-color: var(--input-bg-focus) !important;
+            box-shadow: 0 0 0 4px var(--primary-light) !important;
+        }
+
+        .senha-toggle {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            min-width: 0;
+            padding: 0;
+            margin: 0;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: none;
+            transition: var(--transition);
+            z-index: 2;
+        }
+
+        .senha-toggle::before { display: none !important; }
+        .senha-toggle svg { width: 18px; height: 18px; }
+
+        .senha-toggle:hover {
+            background: var(--primary-light);
+            color: var(--primary-color);
+            transform: translateY(-50%) scale(1.08);
+            box-shadow: none;
+        }
+
+        .senha-toggle:active { transform: translateY(-50%) scale(0.95); }
+
+        /* Alterna os ícones de olho aberto/fechado */
+        .senha-toggle .icon-olho-aberto { display: block; }
+        .senha-toggle .icon-olho-fechado { display: none; }
+
+        .senha-toggle.visivel .icon-olho-aberto { display: none; }
+        .senha-toggle.visivel .icon-olho-fechado { display: block; }
+
+        /* Modo escuro */
+        body.dark-mode .senha-wrapper input {
+            background-color: var(--input-bg) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-dark) !important;
+        }
+
+        body.dark-mode .senha-wrapper input:focus {
+            border-color: var(--gold-color) !important;
+            background-color: var(--input-bg-focus) !important;
+            box-shadow: 0 0 0 4px rgba(242,196,74,0.18) !important;
+        }
     </style>
 </head>
 <body>
@@ -196,7 +280,21 @@
             <input type="email" id="admin-email" required placeholder="Ex: admin@premiacao.com">
 
             <label for="admin-senha">Senha do Painel</label>
-            <input type="password" id="admin-senha" required placeholder="Digite a senha de acesso ao painel" style="width: 100%; padding: 14px 16px; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; background-color: var(--input-bg); color: var(--text-dark); margin-top: 8px;">
+            <div class="senha-wrapper">
+                <input type="password" id="admin-senha" required placeholder="Digite a senha de acesso ao painel" autocomplete="current-password">
+                <button type="button" class="senha-toggle" id="btn-ver-senha" aria-label="Mostrar senha" title="Mostrar senha">
+                    <!-- Olho aberto (mostrando o que está oculto → clicar mostra a senha) -->
+                    <svg class="icon-olho-aberto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <!-- Olho fechado (escondendo a senha → clicar esconde) -->
+                    <svg class="icon-olho-fechado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                </button>
+            </div>
 
             <button type="submit" id="btn-admin-login">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -370,9 +468,33 @@
         <h3 id="titulo-modal-senha">Alterar Senha</h3>
         <p id="desc-modal-senha" style="color: var(--text-muted); font-size: 14px; margin-bottom: 25px;">Por segurança, defina uma nova senha para o seu acesso.</p>
         <form id="form-alterar-senha">
-            <input type="password" id="nova-senha" required placeholder="Digite a nova senha" class="input-modal">
-            <input type="password" id="confirma-nova-senha" required placeholder="Confirme a nova senha" class="input-modal">
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <div class="senha-wrapper">
+                <input type="password" id="nova-senha" required placeholder="Digite a nova senha" class="input-modal" style="margin-bottom: 0;">
+                <button type="button" class="senha-toggle" data-target="nova-senha" aria-label="Mostrar senha" title="Mostrar senha">
+                    <svg class="icon-olho-aberto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <svg class="icon-olho-fechado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="senha-wrapper" style="margin-top: 15px;">
+                <input type="password" id="confirma-nova-senha" required placeholder="Confirme a nova senha" class="input-modal" style="margin-bottom: 0;">
+                <button type="button" class="senha-toggle" data-target="confirma-nova-senha" aria-label="Mostrar senha" title="Mostrar senha">
+                    <svg class="icon-olho-aberto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <svg class="icon-olho-fechado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                </button>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button type="button" id="btn-fechar-modal" class="btn-secundario btn-modal" style="display:none; width: 40%;">Cancelar</button>
                 <button type="submit" id="btn-salvar-senha" class="btn-modal" style="width: 100%;">
                     <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -405,6 +527,37 @@
         });
     });
 
+    // ============================================================
+    // 👁️ MOSTRAR / ESCONDER SENHA
+    // ============================================================
+    function initSenhaToggles() {
+        document.querySelectorAll('.senha-toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.dataset.target
+                    || btn.closest('.senha-wrapper')?.querySelector('input')?.id;
+                if (!targetId) return;
+
+                const input = document.getElementById(targetId);
+                if (!input) return;
+
+                const mostrar = input.type === 'password';
+                input.type = mostrar ? 'text' : 'password';
+                btn.classList.toggle('visivel', mostrar);
+                btn.setAttribute('aria-label', mostrar ? 'Esconder senha' : 'Mostrar senha');
+                btn.setAttribute('title', mostrar ? 'Esconder senha' : 'Mostrar senha');
+
+                // Mantém o foco no input para o usuário continuar digitando
+                input.focus();
+                // Coloca o cursor no fim do texto
+                const len = input.value.length;
+                try { input.setSelectionRange(len, len); } catch (e) {}
+            });
+        });
+    }
+
+    // Inicializa os botões de mostrar senha assim que o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', initSenhaToggles);
+
     // Credenciais do Supabase
     const supabaseUrl = 'https://ypyhbuoglipxsyazsxoj.supabase.co';
     const supabaseKey = 'sb_publishable_ufcIVBj-f_fHQqnecaxEfw_50Cslvyx';
@@ -418,7 +571,7 @@
     // Estado global
     let candidatosData = [];
     let mapaSetores = {};
-    let mapaFotos = {};       // 🖼️ nome do candidato → URL da foto
+    let mapaFotos = {};
     let SERIES_LISTA = [];
 
     const ICON = {
@@ -439,7 +592,7 @@
         mapaFotos = {};
         candidatosData.forEach(c => {
             mapaSetores[c.nome] = c.serie;
-            mapaFotos[c.nome] = c.foto;   // 🖼️
+            mapaFotos[c.nome] = c.foto;
         });
         SERIES_LISTA = [...new Set(candidatosData.map(c => c.serie))].sort();
     }
@@ -516,6 +669,9 @@
     document.getElementById('btn-fechar-modal').addEventListener('click', () => {
         document.getElementById('modal-senha').style.display = 'none';
         document.getElementById('form-alterar-senha').reset();
+        // Reseta os botões de mostrar senha ao fechar
+        document.querySelectorAll('#form-alterar-senha .senha-toggle').forEach(btn => btn.classList.remove('visivel'));
+        document.querySelectorAll('#form-alterar-senha input').forEach(input => input.type = 'password');
     });
 
     document.getElementById('form-alterar-senha').addEventListener('submit', async function(e) {
@@ -539,6 +695,8 @@
                 adminLogado.senha = nova;
                 document.getElementById('modal-senha').style.display = 'none';
                 document.getElementById('form-alterar-senha').reset();
+                document.querySelectorAll('#form-alterar-senha .senha-toggle').forEach(btn => btn.classList.remove('visivel'));
+                document.querySelectorAll('#form-alterar-senha input').forEach(input => input.type = 'password');
                 if (trocaObrigatoria) mostrarDashboard();
             } else { alert("Erro ao salvar."); }
         } catch (erro) { alert("Erro de comunicação."); }
@@ -590,7 +748,7 @@
     }
 
     // ============================================================
-    // RANKING — com peso por posição (1º=3, 2º=2, 3º=1) + FOTO
+    // RANKING — com peso por posição + FOTO
     // ============================================================
     function renderizarListasCandidatos(votos) {
         const container = document.getElementById('container-ranking-candidatos');
